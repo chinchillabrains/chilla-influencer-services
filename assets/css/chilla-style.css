@@ -1,0 +1,43 @@
+#custom-login-page #login h1 a, #custom-login-page #login_error {
+    display: none !important;
+}
+
+#custom-login-page #login form .input, 
+#custom-login-page #login input[type=password], 
+#custom-login-page #login input[type=text] {
+    font-size: 24px;
+    line-height: 1.33333333;
+    width: 100%;
+    border-width: .0625rem;
+    padding: .1875rem .3125rem;
+    margin: 0 6px 16px 0;
+    min-height: 40px;
+    max-height: none;
+}
+
+#custom-login-page input#wp-submit {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    margin: 12px auto;
+    display: block;
+}
+#custom-login-page #nav, #custom-login-page #backtoblog {
+    display: none !important;
+}
+#custom-login-page__links, #custom-login-page .privacy-policy-page-link {
+    margin: 20px;
+    text-align: center;
+}
+
+.dashboard-section {
+    display: none;
+}
+.dashboard-section:first-child {
+    display: block;
+}
+.beefluence-dashboard-nav__section {
+    list-style: '> ';
+}

@@ -1,0 +1,23 @@
+string(10) "price_calc"
+
+object(beefluence\Service_Price_Calc)#16578 (7) {
+  ["category":"beefluence\Service_Price_Calc":private]=>
+  string(14) "Meet the Brand"
+  ["followers":"beefluence\Service_Price_Calc":private]=>
+  string(9) "116k-130k"
+  ["engagement":"beefluence\Service_Price_Calc":private]=>
+  string(6) "2,5-5%"
+  ["category_code":"beefluence\Service_Price_Calc":private]=>
+  string(4) "meet"
+  ["followers_tier":"beefluence\Service_Price_Calc":private]=>
+  int(9)
+  ["engagement_tier":"beefluence\Service_Price_Calc":private]=>
+  int(1)
+  ["total_price":"beefluence\Service_Price_Calc":private]=>
+  int(245)
+}
+
+string(5) "price"
+
+int(245)
+

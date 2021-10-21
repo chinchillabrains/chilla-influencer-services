@@ -41,3 +41,240 @@
 .beefluence-dashboard-nav__section {
     list-style: '> ';
 }
+
+.dashboard-services-list {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    list-style: none;
+    margin: 0;
+}
+
+
+.dashboard-services-list__service {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    padding: 20px 0;
+}
+.dashboard-services-list__serviceWrapper {
+    border-bottom: 1px solid lightgray;
+    padding: 20px 0;
+}
+
+.dashboard-services-list__serviceOrders {
+    text-align: center;
+}
+.dashboard-services-list__ordersToggle {
+    cursor: pointer;
+}
+.dashboard-services-list__orders {
+    display: none;
+}
+.dashboard-services-list__order {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    text-align: left;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    padding: 10px 50px;
+}
+.dashboard-services-list__serviceCol {
+    padding: 10px
+    
+}
+
+.dashboard-services-list__serviceCol:nth-child(1) {
+    width: 25%;
+}
+
+.dashboard-services-list__serviceCol:nth-child(2) {
+    width: 55%;
+}
+
+.dashboard-services-list__serviceCol:nth-child(3) {
+    width: 20%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+}
+
+.dashboard-services-list__serviceTitle {
+    line-height: 1.2em;
+}
+
+.dashboard-services-list__servicePrice {
+    display: block;
+    color: black;
+    font-size: 19px;
+    margin-bottom: 10px;
+}
+.dashboard-services-list__serviceStock {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+}
+.dashboard-services-list__serviceStockstatus {
+    display: block;
+    font-size: 13px;
+    margin: 0 10px;
+}
+.dashboard-services-list__serviceStockswitch {
+    margin: 0 10px;
+}
+
+.dashboard-services-list__serviceProductstatus {
+    display: block;
+    line-height: 15px;
+    font-size: 13px;
+    text-align: center;
+    width: 100%;
+}
+
+.dashboard-services-list__service--orange {
+    color: orange;
+}
+
+.dashboard-services-list__service--green {
+    color: #03bd03;
+}
+
+.dashboard-services-list__service--red {
+    color: red;
+}
+
+/* Switch */
+.chilla-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+  }
+  
+  .chilla-toggle-switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .chilla-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    -o-transition: .4s;
+    transition: .4s;
+  }
+  
+  .chilla-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 13px;
+    width: 13px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    -o-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .chilla-toggle-slider {
+    background-color: #03bd03;
+  }
+  
+  input:focus + .chilla-toggle-slider {
+    -webkit-box-shadow: 0 0 1px #2196F3;
+            box-shadow: 0 0 1px #2196F3;
+  }
+  
+  input:checked + .chilla-toggle-slider:before {
+    -webkit-transform: translateX(13px);
+    -ms-transform: translateX(13px);
+    transform: translateX(13px);
+  }
+  
+  /* Rounded sliders */
+  .chilla-toggle-slider.round {
+    border-radius: 17px;
+  }
+  
+  .chilla-toggle-slider.round:before {
+    border-radius: 50%;
+  }
+
+  /* Advertiser services */
+  .ordered-services, .ordered-services__services {
+    list-style: none;
+    margin: 0;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+}
+
+.ordered-services__service {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    padding-bottom: 15px;
+    border-bottom: 1px solid lightgray;
+}
+
+.ordered-services__service .ordered-services__img {
+    width: 20%;
+}
+
+.ordered-services__txtwrapper {
+    width: 80%;
+    padding: 10px;
+}
+
+
+.ordered-services__details {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+}
+
+.login #login h1 a {
+    background-image: url(/wp-content/uploads/2021/09/cropped-1.-BEE-MAIN-HEADER-LOGO.png);
+    background-size: contain;
+    width: 100%;
+}
+
+@media screen and (min-width: 1024px) {    
+    #beefluence-dashboard-nav {
+        margin-top: 80px;
+    }
+}
+
+.beef-service-featured-stats {
+    padding: 5px;
+}
+.beef-service-featured-stats__stat {
+    display: block;
+    text-align: center;
+}

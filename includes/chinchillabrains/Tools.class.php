@@ -59,7 +59,35 @@ class Tools {
         
         
     }
-    public function log ( $data ) {
+
+    public static function get_orders ( $object_id, $search_by ) {
+        global $wpdb;
+        if ( $search_by == 'product' ) {
+            $orders_query = "SELECT order_items.order_id AS ID
+            FROM {$wpdb->prefix}woocommerce_order_items as order_items
+            LEFT JOIN {$wpdb->prefix}woocommerce_order_itemmeta as order_item_meta ON order_items.order_item_id = order_item_meta.order_item_id
+            LEFT JOIN {$wpdb->posts} AS posts ON order_items.order_id = posts.ID
+            WHERE posts.post_type = 'shop_order'
+            AND order_items.order_item_type = 'line_item'
+            AND order_item_meta.meta_key = '_product_id'
+            AND order_item_meta.meta_value = '{$object_id}'";
+        } elseif ( $search_by == 'customer' ) {
+            $orders_query = "SELECT ID FROM {$wpdb->posts} WHERE post_type='shop_order' AND ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_customer_user' AND meta_value='{$object_id}') ORDER BY post_modified_gmt DESC";
+        } else {
+            return false;
+        }
+        $result = $wpdb->get_results( $orders_query, 'ARRAY_A' );
+        $ret_arr = [];
+        if ( empty( $result ) ) {
+            return false;
+        }
+        foreach ( $result as $order ) {
+            $ret_arr[] = (int) $order['ID'];
+        }
+        return $ret_arr;
+    }
+
+    protected function log ( $data ) {
         ob_start();
         var_dump( $data );
         $data_str = ob_get_clean();

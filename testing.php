@@ -1,14 +1,19 @@
 <?php
 
-// require_once( __DIR__ . '/includes/chinchillabrains/Tools.class.php' );
-// use chinchillabrains\Tools as Chin_Tools;
+require_once( __DIR__ . '/includes/chinchillabrains/Tools.class.php' );
+use chinchillabrains\Tools as Chin_Tools;
 
 add_action( 'admin_head', function () {
     if ( isset( $_GET['run-custom-code'] ) ) {
 
         // Chin_Tools::test();
+        // $product_id = 1530;
+        // $customer_id = 3; // ilias.p
+        // // var_dump( Chin_Tools::get_orders( $product_id, 'product' ) );
+        // var_dump( Chin_Tools::get_orders( $customer_id, 'customer' ) );
 
-        // \chinchillabrains\Tools::set_product_terms();
+
+        // var_dump( get_option( 'admin_email' ) );
 
 
         // $product_id = 1461;

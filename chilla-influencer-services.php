@@ -23,6 +23,7 @@ require_once( __DIR__ . '/includes/beefluence/Shortcodes.class.php' );
 use beefluence\Shortcodes as Beef_Short;
 require_once( __DIR__ . '/includes/chinchillabrains/Tools.class.php' );
 use chinchillabrains\Tools as Chin_Tools;
+require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
 
 if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
@@ -73,6 +74,8 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             add_filter( 'oa_social_login_filter_new_user_role', array( $this, 'oa_social_login_set_new_user_role' ) );
 
+            add_action( 'beef_update_influencer_product', array( $this, 'update_influencer_product' ), 10, 1 );
+
             add_action( 'wp_enqueue_scripts', array( $this, 'add_scripts_and_styles' ) );
             add_action( 'login_enqueue_scripts', array( $this, 'add_scripts_and_styles' ) );
 
@@ -109,8 +112,42 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             add_action( 'wp_head', array( $this, 'css_blur_influencer_names' ), 1 );
 
+
+            // add_action( 'admin_head', function () {
+            //     if ( isset( $_GET['temp'] ) ) {
+            //         $influencer_services = new Chilla_Products( 1831 );
+            //         $influencer_services->update_variable_product( ['title' => 'TestTitle', 'sku' => 'sku_tzzxest', 'post_status' = 'publish'] );
+            //         $influencer_services->update_variation( ['price' => 17, 'category' => 'postbrand', 'platform' => 'twitter'] );
+            //     }
+            // } );
+
         }
 
+        public function update_influencer_product ( $options ) {
+            $action = $options['action'];
+            $user_id = $options['user_id'];
+            $sku = $options['sku'];
+            $field_names = [
+                'name',
+                'description',
+                'profile_picture',
+                'area',
+                'industry',
+                'social_platform',
+                'instagram_followers_txt',
+                'facebook_page_likes_txt',
+                'tiktok_followers_txt',
+                'twitter_followers_txt',
+                'youtube_subscribers_txt',
+                'audience_age',
+                'mean_engagement_rate_num',
+                'audience_gender',
+            ];
+            $product_data = [];
+            foreach ( $field_names as $field_name ) {
+                $product_data[] = get_field( $field_name, 'user_' . $user_id );
+            }
+        }
 
         public function replace_search_placeholder ( $translated ) {
             $translated = str_ireplace( 'Αναζήτηση προϊόντων&hellip;', 'Ψάχνω Influencer για&hellip;', $translated );
@@ -529,12 +566,27 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
 
         protected function save_influencer_details ( $user ) {
+            // Check if variable product exists for current user & create/update it
             $user_id = $user->ID;
+            $product_sku = 'influencer_' . $user_id;
+            $product_id = wc_get_product_id_by_sku( $user_id );
+            $args = [
+                'user_id' => $user_id,
+                'sku' => $product_sku,
+            ];
             $pic_media_id = get_field( 'profile_picture', 'user_' . $user_id );
             if ( class_exists( 'Simple_Local_Avatars' ) ) {
                 $avatar = new Simple_Local_Avatars();
                 $avatar->set_avatar_rest( array( 'media_id' => $pic_media_id ), $user );
             }
+            if ( empty( $product_id ) ) {
+                $args['action'] = 'create';
+                do_action( 'beef_update_influencer_product', $args );
+                return;
+            }
+            $args['action'] = 'update';
+            $args['product_id'] = $product_id;
+            do_action( 'beef_update_influencer_product', $args );
         }
 
         public function dashboard_section_newservice ( $args ) {

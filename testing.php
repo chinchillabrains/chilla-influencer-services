@@ -2,9 +2,23 @@
 
 require_once( __DIR__ . '/includes/chinchillabrains/Tools.class.php' );
 use chinchillabrains\Tools as Chin_Tools;
+require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
+
 
 add_action( 'admin_head', function () {
     if ( isset( $_GET['run-custom-code'] ) ) {
+
+        // $influencer_services = new Chilla_Products();
+        // $influencer_services->update_variation( ['id' => 2009, 'stock_status' => 'instock'] );
+
+        // $parent_id = 1961;
+        // $variable_obj = new WC_Product_Variable( $parent_id );
+        // $variations = $variable_obj->get_available_variations();
+
+        // foreach ( $variations as $variation ) {
+        //     var_dump( $variation );
+        // }
+
 
         // Chin_Tools::test();
         // $product_id = 1530;

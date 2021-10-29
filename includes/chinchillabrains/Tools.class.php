@@ -43,14 +43,18 @@ class Tools {
                 $term_count++;
             }
         }
-        
+        $variation_attrs = [
+            'pa_servicecategory',
+            'pa_serviceplatform'
+        ];
         $product_attributes = array();
         foreach ( $combined_attributes as $tax => $terms ) {
+            $is_variation = in_array( $tax, $variation_attrs ) ? 1 : 0;
             $product_attributes[ $tax ] = array(
                 'name' => $tax,
                 'value' => $terms,
                 'is_visible' => 1,
-                'is_variation' => 0,
+                'is_variation' => $is_variation,
                 'is_taxonomy' => 1
             );
         }
@@ -87,7 +91,7 @@ class Tools {
         return $ret_arr;
     }
 
-    protected function log ( $data ) {
+    protected static function log ( $data ) {
         ob_start();
         var_dump( $data );
         $data_str = ob_get_clean();

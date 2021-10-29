@@ -23,6 +23,7 @@ require_once( __DIR__ . '/includes/beefluence/Shortcodes.class.php' );
 use beefluence\Shortcodes as Beef_Short;
 require_once( __DIR__ . '/includes/chinchillabrains/Tools.class.php' );
 use chinchillabrains\Tools as Chin_Tools;
+require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
 
 if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
@@ -67,11 +68,14 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             add_shortcode( 'chilla_dashboard', array( $this, 'get_user_dashboard' ) );
             
 
-            add_action('acf/save_post', array( $this, 'service_add_values_on_save_post' ), 200, 1);
+            // add_action('acf/save_post', array( $this, 'service_add_values_on_save_post' ), 200, 1);
 
             add_action('acf/save_post', array( $this, 'user_details_save' ), 201, 1);
 
             add_filter( 'oa_social_login_filter_new_user_role', array( $this, 'oa_social_login_set_new_user_role' ) );
+
+            add_action( 'beef_update_influencer_product', array( $this, 'update_influencer_product' ), 10, 1 );
+            add_action( 'beef_update_product_variations', array( $this, 'update_product_variations' ), 10, 1 );
 
             add_action( 'wp_enqueue_scripts', array( $this, 'add_scripts_and_styles' ) );
             add_action( 'login_enqueue_scripts', array( $this, 'add_scripts_and_styles' ) );
@@ -109,8 +113,124 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             add_action( 'wp_head', array( $this, 'css_blur_influencer_names' ), 1 );
 
+            // Hide outofstock variations
+            add_filter( 'woocommerce_variation_is_active', function ( $active, $variation ) {
+                if ( ! $variation->is_in_stock() ) {
+                    return false;
+                }
+                return $active;
+            }, 10, 2 );
+
+            add_action( 'admin_head', function () {
+                if ( isset( $_GET['temp'] ) ) {
+                    // $influencer_services = new Chilla_Products(  );
+                    // $influencer_services->update_variable_product( ['title' => 'TestTitle', 'sku' => 'sku_tzzzdfssfdxest', 'post_status' => 'publish'] );
+                    // $influencer_services->update_variation( ['price' => 17, 'category' => 'postbrand', 'platform' => 'twitter'] );
+                    // $influencer_services->update_variation( ['price' => 17, 'category' => 'meetbrand', 'platform' => 'facebook'] );
+
+                    // do_action( 'beef_update_product_variations', 1825 );
+                }
+            } );
+
         }
 
+        public function update_influencer_product ( $options ) {
+            $action = $options['action'];
+            $user_id = $options['user_id'];
+            $sku = $options['sku'];
+            $field_names = [
+                'product_title',
+                'description',
+                'featured_image',
+            ];
+            $product_data = [];
+            foreach ( $field_names as $field_name ) {
+                $product_data[$field_name] = get_field( $field_name, 'user_' . $user_id );
+                
+            }
+            $product_options = [
+                'author_id' => $user_id,
+                'sku' => $sku,
+                'title' => $product_data['product_title'],
+
+            ];
+            $product_id = isset( $options['product_id'] ) ? $options['product_id'] : 0;
+            $influencer_services = new Chilla_Products( $product_id );
+            // Create/Update Parent product
+            $product_id = $influencer_services->update_variable_product( $product_options );
+
+            $this->service_add_values_on_save_post( $product_id, 'user_' . $user_id );
+
+            do_action( 'beef_update_product_variations', $product_id );
+
+            $this->notification_newservice_admin( $product_id );
+            
+        }
+
+        public function update_product_variations ( $product_id = 0 ) {
+            if ( empty( $product_id ) ) {
+                return;
+            }
+            $influencer_services = new Chilla_Products( $product_id );
+
+            $service_categories = [
+                'meetbrand' => 'Meet the Brand',
+                'postbrand' => 'Post a Brand',
+                'storybrand' => 'Story / Video a Brand',
+            ];
+
+            $author_id = get_post_field( 'post_author', $product_id );
+
+            $facebook_likes         = get_field( 'facebook_likes', 'user_' . $author_id );
+            $instagram_followers    = get_field( 'instagram_followers', 'user_' . $author_id );
+            $tiktok_followers       = get_field( 'tiktok_followers', 'user_' . $author_id );
+            $twitter_followers      = get_field( 'twitter_followers', 'user_' . $author_id );
+            $youtube_subscribers    = get_field( 'youtube_subscribers', 'user_' . $author_id );
+            $platforms = [
+                'facebook'      => $facebook_likes->name,
+                'instagram'     => $instagram_followers->name,
+                'tiktok'        => $tiktok_followers->name,
+                'twitter'       => $twitter_followers->name,
+                'youtube'       => $youtube_subscribers->name,
+            ];
+
+            $eng_rate    = get_field( 'avgengagerate', 'user_' . $author_id );
+
+            $variations_added = get_post_meta( $product_id, 'beef_variations_added', true );
+
+            if ( empty( $variations_added ) ) {
+                foreach ( $service_categories as $category_slug => $category_label ) {
+                    foreach ( $platforms as $platform => $platform_followers ) {
+                        $price_options = [
+                            'category'      => $category_label,
+                            'followers'     => $platform_followers,
+                            'engagement'    => $eng_rate->name,
+                        ];
+                        $service_price = $this->get_product_price( $price_options );
+                        $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
+                    }   
+                }
+                update_post_meta( $product_id, 'beef_variations_added', true );
+            } else {
+                $variable_obj = new WC_Product_Variable( $product_id );
+                $variations = $variable_obj->get_available_variations();
+                foreach ( $variations as $variation ) {
+                    $var_id = $variation['variation_id'];
+                    $platform = $variation['attributes']['attribute_pa_serviceplatform'];
+                    $platform_followers = $platforms[ $platform ];
+                    $category_slug = $variation['attributes']['attribute_pa_servicecategory'];
+                    $category_label = $service_categories[ $category_slug ];
+                    $price_options = [
+                        'category'      => $category_label,
+                        'followers'     => $platform_followers,
+                        'engagement'    => $eng_rate->name,
+                    ];
+                    $service_price = $this->get_product_price( $price_options );
+                    $influencer_services->update_variation( ['id' => $var_id, 'price' => $service_price] );
+                }
+            }
+
+        }
 
         public function replace_search_placeholder ( $translated ) {
             $translated = str_ireplace( 'Αναζήτηση προϊόντων&hellip;', 'Ψάχνω Influencer για&hellip;', $translated );
@@ -127,7 +247,6 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         public function register_influencer ( $user_id ) {
             if ( isset( $_POST['beefluence-register'] ) && $_POST['beefluence-register'] == 'influencer' ) {
                 $user = new WP_User( $user_id );
-                $this-log( $user );
                 $user->set_role( 'influencer' );
                 $this->notification_newinfluencer_admin( $user->user_login, $user->user_email );
             }
@@ -252,17 +371,17 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             }
         }
 
-        public function service_add_values_on_save_post ( $post_id ) {
+        public function service_add_values_on_save_post ( $post_id, $influencer_id = '' ) {
             $product = wc_get_product( $post_id );
-            if ( empty( $product ) ) {
+            if ( empty( $product ) || empty( $influencer_id ) ) {
                 return;
             }
-            $request_uri = $_SERVER['REQUEST_URI'];
+            // $request_uri = $_SERVER['REQUEST_URI'];
             
-            if ( strpos( $request_uri, 'influencer-dashboard' ) === false ) {
-                $this->log( 'acf/save_post request: ' . $request_uri );
-                return;    
-            }
+            // if ( strpos( $request_uri, 'influencer-dashboard' ) === false ) {
+            //     $this->log( 'acf/save_post request: ' . $request_uri );
+            //     return;    
+            // }
 
 
 
@@ -287,7 +406,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 'gallery',
             );
             foreach ( $fields_to_get as $field_name ) {
-                $product_fields[ $field_name ] = get_field( $field_name, $post_id );
+                $product_fields[ $field_name ] = get_field( $field_name, $influencer_id );
             }
 
             // Do not add Category. Only subcategory
@@ -334,9 +453,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                     $att_values[] = $term_data->name;
 
                     $attribute_tax = $term_data->taxonomy;
-                    if ( in_array( $term, array( 'facebook_likes', 'instagram_followers', 'tiktok_followers', 'twitter_followers', 'youtube_subscribers' ), true ) ) {
-                        $service_followers = $term_data->name;
-                    }
+                    // if ( in_array( $term, array( 'facebook_likes', 'instagram_followers', 'tiktok_followers', 'twitter_followers', 'youtube_subscribers' ), true ) ) {
+                    //     $service_followers = $term_data->name;
+                    // }
                 }
                 $attributes_arr[ $attribute_tax ] = $att_values;
             }
@@ -354,28 +473,27 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             
 
-            $price = $this->get_product_price( 
-                array(
-                    'followers'     => $service_followers,
-                    'engagement'    => $service_engagement,
-                    'category'      => $service_category,
-                ) 
-            );
-            if ( ! empty( $price ) ) {
-                $product->set_regular_price( $price );   
-            }
+            // $price = $this->get_product_price( 
+            //     array(
+            //         'followers'     => $service_followers,
+            //         'engagement'    => $service_engagement,
+            //         'category'      => $service_category,
+            //     ) 
+            // );
+            // if ( ! empty( $price ) ) {
+            //     $product->set_regular_price( $price );   
+            // }
             $product->set_description( $product_fields['description'] );
             $product->set_short_description( $product_fields['description'] );
             $product->set_image_id( $product_fields['featured_image'] );
             $product->save();
             Chin_Tools::set_product_attribute_terms( $post_id, $attributes_arr );
 
-            $this->notification_newservice_admin( $post_id );
-
         }
 
         protected function notification_newservice_admin ( $product_id ) {
-            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
+            // $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
+            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr';
             $subject = 'Beefluence | Νέα υπηρεσία προς έγκριση';
             $message = "Προστέθηκε μια νέα υπηρεσία προς έγκριση. Κωδικός υπηρεσίας: #{$product_id}";
             wp_mail( $to_mail, $subject, $message );
@@ -395,7 +513,6 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $followers = $options['followers'];
             $engagement = $options['engagement'];
             $category = $options['category'];
-            
             $price_calc = new Beef_Price( $category, $followers, $engagement );
             $price = $price_calc->get_price();
 
@@ -529,12 +646,27 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
 
         protected function save_influencer_details ( $user ) {
+            // Check if variable product exists for current user & create/update it
             $user_id = $user->ID;
+            $product_sku = 'influencer_' . $user_id;
+            $product_id = wc_get_product_id_by_sku( $product_sku );
+            $args = [
+                'user_id' => $user_id,
+                'sku' => $product_sku,
+            ];
             $pic_media_id = get_field( 'profile_picture', 'user_' . $user_id );
             if ( class_exists( 'Simple_Local_Avatars' ) ) {
                 $avatar = new Simple_Local_Avatars();
                 $avatar->set_avatar_rest( array( 'media_id' => $pic_media_id ), $user );
             }
+            if ( empty( $product_id ) ) {
+                $args['action'] = 'create';
+                do_action( 'beef_update_influencer_product', $args );
+                return;
+            }
+            $args['action'] = 'update';
+            $args['product_id'] = $product_id;
+            do_action( 'beef_update_influencer_product', $args );
         }
 
         public function dashboard_section_newservice ( $args ) {

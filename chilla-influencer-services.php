@@ -696,13 +696,13 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                     $ret_html .= "<div class=\"dashboard-services-list__serviceCol\">{$service['image']}</div>";
                                     $ret_html .= "<div class=\"dashboard-services-list__serviceCol\">";
                                         $ret_html .= "<h4 class=\"dashboard-services-list__serviceTitle\"><a href=\"{$service_url}\">{$service['title']} - #{$service['id']}</a></h4>";
-                                        $ret_html .= "<span class=\"dashboard-services-list__servicePrice\">Τιμή: {$service['price']}</span>";
-                                        if ( 'green' == $service['product_status_color'] ) {
-                                            $ret_html .= "<div class=\"dashboard-services-list__serviceStock\">";
-                                                $ret_html .= "<span class=\"dashboard-services-list__serviceStockstatus dashboard-services-list__service--{$service['stock_status_color']}\">{$service['stock_status']}</span>";
-                                                $ret_html .= "<label class=\"chilla-toggle-switch dashboard-services-list__serviceStockswitch\"><input type=\"checkbox\" {$stock_checked}><span class=\"chilla-toggle-slider round\"></span></label>";
-                                            $ret_html .= "</div>";
-                                        }
+                                        // $ret_html .= "<span class=\"dashboard-services-list__servicePrice\">Τιμή: {$service['price']}</span>";
+                                        // if ( 'green' == $service['product_status_color'] ) {
+                                        //     $ret_html .= "<div class=\"dashboard-services-list__serviceStock\">";
+                                        //         $ret_html .= "<span class=\"dashboard-services-list__serviceStockstatus dashboard-services-list__service--{$service['stock_status_color']}\">{$service['stock_status']}</span>";
+                                        //         $ret_html .= "<label class=\"chilla-toggle-switch dashboard-services-list__serviceStockswitch\"><input type=\"checkbox\" {$stock_checked}><span class=\"chilla-toggle-slider round\"></span></label>";
+                                        //     $ret_html .= "</div>";
+                                        // }
                                     $ret_html .= "</div>";
                                     $ret_html .= "<div class=\"dashboard-services-list__serviceCol\">";
                                         $ret_html .= "<span class=\"dashboard-services-list__serviceProductstatus dashboard-services-list__service--{$service['product_status_color']}\">{$service['product_status']}</span>";
@@ -715,18 +715,66 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                         foreach ( $orders as $order_id ) {
 
                                             $order_obj = wc_get_order( $order_id );
+                                            $order_items = $order_obj->get_items();
+                                            $order_items_html = '';
+                                            foreach ( $order_items as $item ) {
+                                                $order_items_html .= '<li>' . $item->get_name() . '</li>';
+                                            }
                                             $date_obj = $order_obj->get_date_created();
                                             $date_added = $date_obj->date_i18n( 'd/m/Y' );
                                             $name = $order_obj->get_formatted_billing_full_name();
                                             $total_price = $order_obj->get_formatted_order_total();
                                             $ret_html .= "<div class=\"dashboard-services-list__order\">";
-                                                $ret_html .= "<p>{$name}</p>";
+                                                $ret_html .= "<div><div>{$name}</div><ul>{$order_items_html}</ul></div>";
                                                 $ret_html .= "<div><span>Τιμή: {$total_price} - Ημερομηνία: {$date_added}</span></div>";
                                             $ret_html .= "</div>";
                                         }
                                         $ret_html .= "</div>";
                                     $ret_html .= "</div>";
                                 }
+                                $ret_html .= "<div class=\"dashboard-services-list__variations\">";
+                                $ret_html .= "<p class=\"dashboard-services-list__variationsToggle\">Υπηρεσίες &darr;</p>";
+                                    $parent_product = new WC_Product_Variable( $service['id'] );
+                                    $variations = $parent_product->get_available_variations();
+                                    $variations_sorted = [];
+                                    foreach ( $variations as $variation ) {
+                                        $platform = get_term_by( 'slug', $variation['attributes']['attribute_pa_serviceplatform'], 'pa_serviceplatform' );
+                                        $variation['platform'] = $platform->name;
+                                        $servicecat = get_term_by( 'slug', $variation['attributes']['attribute_pa_servicecategory'], 'pa_servicecategory' );
+                                        $variation['servicecat'] = $servicecat->name;
+                                        if ( $variation['is_in_stock'] ) {
+                                            array_unshift( $variations_sorted, $variation );
+                                        } else {
+                                            array_push( $variations_sorted, $variation );
+                                        }
+                                    }
+                                    $ret_html .= "<ul class=\"dashboard-services-list__variationsList\">";
+                                    foreach ( $variations_sorted as $variation ) {
+                                        // var_dump( $variation );
+                                        if ( $variation['is_in_stock'] ) {
+                                            $variation['stock_status_color'] = 'green';
+                                            $variation['stock_status'] = 'Ενεργή';
+                                        } else {
+                                            $variation['stock_status_color'] = 'red';
+                                            $variation['stock_status'] = 'Ανενεργή';
+                                        }
+                                        $stock_checked = ( 'green' === $variation['stock_status_color'] ? 'checked' : '' );
+                                        $variation_active = ( 'green' === $variation['stock_status_color'] ? 'active' : 'inactive' );
+                                        $ret_html .= "<li class=\"dashboard-services-list__variation\" data-id=\"{$variation['variation_id']}\" data-status=\"{$variation_active}\">";
+                                            $ret_html .= "<div><div>{$variation['platform']}</div><div>{$variation['servicecat']}</div></div>";
+                                            $ret_html .= "<div>{$variation['price_html']}</div>";
+                                            $ret_html .= "<div>";
+                                            if ( 'green' == $service['product_status_color'] ) {
+                                                $ret_html .= "<div class=\"dashboard-services-list__serviceStock\">";
+                                                    $ret_html .= "<span class=\"dashboard-services-list__serviceStockstatus dashboard-services-list__service--{$variation['stock_status_color']}\">{$variation['stock_status']}</span>";
+                                                    $ret_html .= "<label class=\"chilla-toggle-switch dashboard-services-list__serviceStockswitch\"><input type=\"checkbox\" {$stock_checked}><span class=\"chilla-toggle-slider round\"></span></label>";
+                                                $ret_html .= "</div>";
+                                            }
+                                            $ret_html .= "</div>";
+                                        $ret_html .= "</li>";
+                                    }
+                                    $ret_html .= "</ul>";
+                                $ret_html .= "</div>";
                             $ret_html .= "</li>";
                         }
                     $ret_html .= "</ul>";

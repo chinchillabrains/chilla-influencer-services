@@ -62,7 +62,7 @@
     padding: 20px 0;
 }
 .dashboard-services-list__serviceWrapper {
-    border-bottom: 1px solid lightgray;
+    border-bottom: 1px solid black;
     padding: 20px 0;
 }
 
@@ -122,6 +122,7 @@
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
+    justify-content: center;
     -webkit-box-align: center;
         -ms-flex-align: center;
             align-items: center;
@@ -277,4 +278,40 @@
 .beef-service-featured-stats__stat {
     display: block;
     text-align: center;
+}
+
+.dashboard-services-list__variationsList {
+    list-style: none;
+    margin: 0;
+}
+
+.dashboard-services-list__variation {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    border-bottom: 1px solid lightgray;
+    padding: 10px 5px;
+}
+
+.dashboard-services-list__serviceOrders{
+    border-bottom: 1px solid black !important;
+}
+
+.dashboard-services-list__variationsToggle {
+    cursor: pointer;
+    text-align: center;
+    margin: 20px;
+}
+
+.dashboard-services-list__ordersToggle, .dashboard-services-list__variationsToggle {
+    font-size: 1.2em;
+}
+.dashboard-services-list__variationsList {
+    display: none;
+}
+
+.dashboard-services-list__variation > div {
+    text-align: center;
+    width: 33%;
 }

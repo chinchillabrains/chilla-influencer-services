@@ -24,8 +24,8 @@ jQuery(document).ready(function ($) {
 
         
         $('.dashboard-services-list__serviceStockswitch').click(function () {
-            service_id = $(this).closest('.dashboard-services-list__service').data('id');
-            service_status = $(this).closest('.dashboard-services-list__service').data('status');
+            service_id = $(this).closest('.dashboard-services-list__variation').data('id');
+            service_status = $(this).closest('.dashboard-services-list__variation').data('status');
             if (service_status=='inactive') {
                 var param = 'beefluence-service-activate='+service_id;
             } else {
@@ -39,6 +39,10 @@ jQuery(document).ready(function ($) {
 
         $('.dashboard-services-list__ordersToggle').click(function () {
             $(this).closest('.dashboard-services-list__serviceOrders').find('.dashboard-services-list__orders').toggle();
+        });
+
+        $('.dashboard-services-list__variationsToggle').click(function () {
+            $(this).closest('.dashboard-services-list__variations').find('.dashboard-services-list__variationsList').toggle();
         });
 
     }

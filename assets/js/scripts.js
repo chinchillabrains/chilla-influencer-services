@@ -36,6 +36,16 @@ jQuery(document).ready(function ($) {
             window.location.href = url + '?' + param;
         });
 
+        $('form.beefluence-dashboard-price-update').submit(function (e) {
+            e.preventDefault();
+            service_id = $(this).closest('.dashboard-services-list__variation').data('id');
+            service_price = $(this).find('.beefluence-dashboard-price-input').val();
+            param = 'beefluence-service-price-update='+service_id+'&beefluence-service-price='+service_price;
+            var url = window.location.href.split('#')[0];
+            url = url.split('?')[0];
+            window.location.href = url + '?' + param;
+        });
+
 
         $('.dashboard-services-list__ordersToggle').click(function () {
             $(this).closest('.dashboard-services-list__serviceOrders').find('.dashboard-services-list__orders').toggle();

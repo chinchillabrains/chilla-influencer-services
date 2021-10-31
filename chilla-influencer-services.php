@@ -132,6 +132,59 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 }
             } );
 
+            add_action( 'wp_head', array( $this, 'set_product_price' ) );
+
+        }
+
+        public function price_is_editable ( $platform, $user_id ) {
+            if ( empty( $platform ) || empty( $user_id ) ) {
+                return false;
+            }
+            $field_map = [
+                'facebook'      => 'facebook_likes_num',
+                'instagram'     => 'instagram_followers_num',
+                'twitter'       => 'twitter_followers_num',
+                'tiktok'        => 'tiktok_followers_num',
+                'youtube'       => 'youtube_subscribers_num',
+            ];
+            if ( ! isset( $field_map[ $platform ] ) ) {
+                return false;
+            }
+            $followers = (int) get_field( $field_map[ $platform ], 'user_' . $user_id );
+            if ( $followers > 40000 ) {
+                return true;
+            }
+            return false;
+        }
+
+        public function get_price_edit_html ( $price = '' ) {
+            $price = (string) $price;
+            $price = str_replace( ',', '.', $price );
+            $price = (float) $price;
+            return "<form class=\"beefluence-dashboard-price-update\">Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Ενημέρωση\" /></form>";
+        }
+
+        public function set_product_price (  ) {
+            if ( ! isset( $_GET['beefluence-service-price-update'] ) || ! isset( $_GET['beefluence-service-price'] ) ) {
+                return false;
+            }
+            $prod_id = (int) $_GET['beefluence-service-price-update'];
+            $price = $_GET['beefluence-service-price'];
+            $price = str_replace( ',', '.', $price );
+            $price = floatval( $price );
+            $price = round( $price, 2 );
+            $price = $price / 1.24;
+            $product = wc_get_product( $prod_id );
+            if ( empty( $product ) ) {
+                return;
+            }
+            $service_author_id = (int) get_post_field( 'post_author', $prod_id ); // String
+            $user = wp_get_current_user();
+            $current_user_id = (int) $user->ID;
+            if ( $service_author_id === $current_user_id ) {
+                $product->set_regular_price( $price );
+                $product->save();
+            }
         }
 
         public function update_influencer_product ( $options ) {
@@ -163,7 +216,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             do_action( 'beef_update_product_variations', $product_id );
 
-            $this->notification_newservice_admin( $product_id );
+            if ( 'create' === $action ) {
+                $this->notification_newservice_admin( $product_id );
+            }
             
         }
 
@@ -750,7 +805,12 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                     }
                                     $ret_html .= "<ul class=\"dashboard-services-list__variationsList\">";
                                     foreach ( $variations_sorted as $variation ) {
-                                        // var_dump( $variation );
+                                        $price_is_editable = $this->price_is_editable( $variation['attributes']['attribute_pa_serviceplatform'], $args['user_id'] );
+                                        if ( $price_is_editable ) {
+                                            $variation_price = $this->get_price_edit_html( $variation['display_price'] );
+                                        } else {
+                                            $variation_price = $variation['price_html'];
+                                        }
                                         if ( $variation['is_in_stock'] ) {
                                             $variation['stock_status_color'] = 'green';
                                             $variation['stock_status'] = 'Ενεργή';
@@ -762,7 +822,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                         $variation_active = ( 'green' === $variation['stock_status_color'] ? 'active' : 'inactive' );
                                         $ret_html .= "<li class=\"dashboard-services-list__variation\" data-id=\"{$variation['variation_id']}\" data-status=\"{$variation_active}\">";
                                             $ret_html .= "<div><div>{$variation['platform']}</div><div>{$variation['servicecat']}</div></div>";
-                                            $ret_html .= "<div>{$variation['price_html']}</div>";
+                                            $ret_html .= "<div>{$variation_price}</div>";
                                             $ret_html .= "<div>";
                                             if ( 'green' == $service['product_status_color'] ) {
                                                 $ret_html .= "<div class=\"dashboard-services-list__serviceStock\">";
@@ -929,7 +989,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 $sections[ 'logout' ]           = 'Αποσύνδεση';
             } elseif ( in_array( 'influencer', $roles ) ) {
                 $sections[ 'myservices' ]       = 'Οι υπηρεσίες μου';
-                $sections[ 'newservice' ]       = 'Νέα υπηρεσία';
+                // $sections[ 'newservice' ]       = 'Νέα υπηρεσία';
                 $sections[ 'accountdetails' ]   = 'Στοιχεία λογαριασμού';
                 $sections[ 'logout' ]           = 'Αποσύνδεση';
             }

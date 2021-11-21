@@ -90,6 +90,8 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             add_action( 'register_new_user', array( $this, 'register_influencer' ), 1, 1 );
 
+            add_action( 'init', array( $this, 'product_follower_taxonomies' ) );
+
             // add_filter( 'login_url', function ( $url ) {
             //     return home_url();
             // } );
@@ -112,6 +114,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             add_filter( 'gettext', array( $this, 'replace_search_placeholder' ), 20, 1);
 
             add_action( 'wp_head', array( $this, 'css_blur_influencer_names' ), 1 );
+            add_action( 'wp_footer', array( $this, 'unblur_and_slice_influencer_names' ), 1 );
 
             // Hide outofstock variations
             add_filter( 'woocommerce_variation_is_active', function ( $active, $variation ) {
@@ -123,17 +126,36 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             add_action( 'admin_head', function () {
                 if ( isset( $_GET['temp'] ) ) {
-                    // $influencer_services = new Chilla_Products(  );
-                    // $influencer_services->update_variable_product( ['title' => 'TestTitle', 'sku' => 'sku_tzzzdfssfdxest', 'post_status' => 'publish'] );
-                    // $influencer_services->update_variation( ['price' => 17, 'category' => 'postbrand', 'platform' => 'twitter'] );
-                    // $influencer_services->update_variation( ['price' => 17, 'category' => 'meetbrand', 'platform' => 'facebook'] );
-
-                    // do_action( 'beef_update_product_variations', 1825 );
+                    
                 }
             } );
 
             add_action( 'wp_head', array( $this, 'set_product_price' ) );
 
+            add_filter( 'body_class', array( $this, 'add_user_body_class' ) );
+
+            add_action( 'woocommerce_new_order', array( $this, 'notify_influencer_for_new_order' ), 20, 1 );
+
+        }
+
+        public function notify_influencer_for_new_order ( $order_id ) {
+
+        }
+
+
+        public function add_user_body_class ( $classes ) {
+            $user = wp_get_current_user();
+            if ( ! empty( $user ) ) {
+                $roles = ( array ) $user->roles;
+                if ( in_array( 'influencer', $roles ) ) {
+                    $classes[] = 'user-is-influencer';
+                }
+                if ( in_array( 'advertiser', $roles ) ) {
+                    $classes[] = 'user-is-advertiser';
+                }
+            }
+
+            return $classes;
         }
 
         public function price_is_editable ( $platform, $user_id ) {
@@ -194,7 +216,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $field_names = [
                 'product_title',
                 'description',
-                'featured_image',
+                // 'featured_image',
             ];
             $product_data = [];
             foreach ( $field_names as $field_name ) {
@@ -282,10 +304,14 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                     ];
                     $service_price = $this->get_product_price( $price_options );
                     $influencer_services->update_variation( ['id' => $var_id, 'price' => $service_price] );
+                    
                 }
             }
+            $influencer_services->update_product_categories();
+            
 
         }
+
 
         public function replace_search_placeholder ( $translated ) {
             $translated = str_ireplace( 'Αναζήτηση προϊόντων&hellip;', 'Ψάχνω Influencer για&hellip;', $translated );
@@ -294,9 +320,21 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
         public function css_blur_influencer_names () {
             echo '<style>body:not(.logged-in) h4.elementor-author-box__name {
-                filter: blur(5px);
-                user-select: none;
+                -webkit-filter: blur(5px);
+                        filter: blur(5px);
+                -webkit-user-select: none;
+                   -moz-user-select: none;
+                    -ms-user-select: none;
+                        user-select: none;
             }</style>';
+        }
+
+
+        public function unblur_and_slice_influencer_names () {
+            echo '<script>var authors = document.querySelectorAll(".elementor-author-box__name");
+            for (i=0; i< authors.length; i++) {
+                authors[i].innerHTML = authors[i].innerHTML.slice(0, 3);
+            }</script>';
         }
 
         public function register_influencer ( $user_id ) {
@@ -452,12 +490,12 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 'audience_age',
                 'industry',
                 'avgengagerate',
-                'featured_image',
-                'facebook_likes',
-                'instagram_followers',
-                'tiktok_followers',
-                'twitter_followers',
-                'youtube_subscribers',
+                // 'featured_image',
+                'facebook_likes_num',
+                'instagram_followers_num',
+                'tiktok_followers_num',
+                'twitter_followers_num',
+                'youtube_subscribers_num',
                 'gallery',
             );
             foreach ( $fields_to_get as $field_name ) {
@@ -483,11 +521,11 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 'audience_age',
                 'industry',
                 'avgengagerate',
-                'facebook_likes',
-                'instagram_followers',
-                'tiktok_followers',
-                'twitter_followers',
-                'youtube_subscribers',
+                // 'facebook_likes',
+                // 'instagram_followers',
+                // 'tiktok_followers',
+                // 'twitter_followers',
+                // 'youtube_subscribers',
             );
             $service_followers = '';
             $service_engagement = $product_fields['avgengagerate']->name;
@@ -540,9 +578,11 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             // }
             $product->set_description( $product_fields['description'] );
             $product->set_short_description( $product_fields['description'] );
-            $product->set_image_id( $product_fields['featured_image'] );
+            // $product->set_image_id( $product_fields['featured_image'] );
             $product->save();
             Chin_Tools::set_product_attribute_terms( $post_id, $attributes_arr );
+
+            Chin_Tools::update_product_followers_filters( $post_id, $product_fields );
 
         }
 
@@ -558,6 +598,13 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
             $subject = 'Beefluence | Νέα εγγραφή Influencer';
             $message = "Νέος Influencer γράφτηκε στον ιστότοπο. Username: {$user_name} E-mail: {$user_email}";
+            wp_mail( $to_mail, $subject, $message );
+        }
+
+        protected function notification_neworder_influencer ( $influencer_email, $service_name, $price, $customer_name ) {
+            $to_mail = $influencer_email . ',ilias.p@wecommerce.gr';
+            $subject = 'Beefluence | Νέα παραγγελία';
+            $message = "Έχετε νέα παραγγελία. Δείτε περισσότερες λεπτομέρειες στο https://beefluence.gr/influencer-login/";
             wp_mail( $to_mail, $subject, $message );
         }
 
@@ -865,6 +912,10 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 $stock_status = $product->get_stock_status();
                 $product_status = $product->get_status();
 
+
+                $influencer_id = (int) str_replace( 'influencer_', '', $product->get_sku() );
+                $thumbnail = get_avatar( $influencer_id );
+
                 if ( $stock_status == 'instock' ) {
                     $stock_status = 'Ενεργή';
                     $stock_status_color = 'green';
@@ -892,7 +943,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                     'product_status'        => $product_status,
                     'product_status_color'  => $product_status_color,
                     'price'                 => $price,
-                    'image'                 => $product->get_image(),
+                    'image'                 => $thumbnail,
                 );
                 array_push( $ret_arr, $product_details );
             }
@@ -919,6 +970,11 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             if ( $service_author_id === $current_user_id ) {
                 $product->set_stock_status( $status_set );
                 $product->save();
+                $parent_id = $product->get_parent_id();
+                if ( ! empty( $parent_id ) ) {
+                    $variable_prod = new Chilla_Products( $parent_id ); 
+                    $variable_prod->update_product_categories();
+                }
             }
 
         }
@@ -945,8 +1001,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                     $product_obj = $item->get_product();
                                     if ( ! empty( $product_obj ) ) {
                                         $url = $product_obj->get_permalink();
-                                        $thumbnail = $product_obj->get_image();
-                                        $name = $product_obj->get_title();
+                                        $influencer_id = (int) str_replace( 'influencer_', '', $product_obj->get_sku() );
+                                        $thumbnail = get_avatar( $influencer_id );
+                                        $name = $product_obj->get_name();
                                         $price = (float) $item->get_subtotal();
                                         $price_tax = (float) $item->get_subtotal_tax();
                                         $total_price = $price + $price_tax;
@@ -1096,6 +1153,145 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             }
 
             return $user_role;
+        }
+
+        public function product_follower_taxonomies () {
+            $labels = array(
+                'name'                       => 'Facebook Likes',
+                'singular_name'              => 'Facebook Likes Number',
+                'menu_name'                  => 'Facebook Likes Number',
+                'all_items'                  => 'All Items',
+                'parent_item'                => 'Parent Item',
+                'parent_item_colon'          => 'Parent Item:',
+                'new_item_name'              => 'New Item Name',
+                'add_new_item'               => 'Add New Item',
+                'edit_item'                  => 'Edit Item',
+                'update_item'                => 'Update Item',
+                'separate_items_with_commas' => 'Separate Item with commas',
+                'search_items'               => 'Search Items',
+                'add_or_remove_items'        => 'Add or remove Items',
+                'choose_from_most_used'      => 'Choose from the most used Items',
+            );
+            $args = array(
+                'labels'                     => $labels,
+                'hierarchical'               => false,
+                'public'                     => true,
+                'show_ui'                    => true,
+                'show_admin_column'          => false,
+                'show_in_nav_menus'          => false,
+                'show_tagcloud'              => false,
+            );
+            register_taxonomy( 'facebook_likes', 'product', $args );
+            
+            $labels = array(
+                'name'                       => 'Instagram Followers',
+                'singular_name'              => 'Instagram Followers Number',
+                'menu_name'                  => 'Instagram Followers Number',
+                'all_items'                  => 'All Items',
+                'parent_item'                => 'Parent Item',
+                'parent_item_colon'          => 'Parent Item:',
+                'new_item_name'              => 'New Item Name',
+                'add_new_item'               => 'Add New Item',
+                'edit_item'                  => 'Edit Item',
+                'update_item'                => 'Update Item',
+                'separate_items_with_commas' => 'Separate Item with commas',
+                'search_items'               => 'Search Items',
+                'add_or_remove_items'        => 'Add or remove Items',
+                'choose_from_most_used'      => 'Choose from the most used Items',
+            );
+            $args = array(
+                'labels'                     => $labels,
+                'hierarchical'               => false,
+                'public'                     => true,
+                'show_ui'                    => true,
+                'show_admin_column'          => false,
+                'show_in_nav_menus'          => false,
+                'show_tagcloud'              => false,
+            );
+            register_taxonomy( 'instagram_followers', 'product', $args );
+            
+            
+            $labels = array(
+                'name'                       => 'TikTok Followers',
+                'singular_name'              => 'TikTok Followers Number',
+                'menu_name'                  => 'TikTok Followers Number',
+                'all_items'                  => 'All Items',
+                'parent_item'                => 'Parent Item',
+                'parent_item_colon'          => 'Parent Item:',
+                'new_item_name'              => 'New Item Name',
+                'add_new_item'               => 'Add New Item',
+                'edit_item'                  => 'Edit Item',
+                'update_item'                => 'Update Item',
+                'separate_items_with_commas' => 'Separate Item with commas',
+                'search_items'               => 'Search Items',
+                'add_or_remove_items'        => 'Add or remove Items',
+                'choose_from_most_used'      => 'Choose from the most used Items',
+            );
+            $args = array(
+                'labels'                     => $labels,
+                'hierarchical'               => false,
+                'public'                     => true,
+                'show_ui'                    => true,
+                'show_admin_column'          => false,
+                'show_in_nav_menus'          => false,
+                'show_tagcloud'              => false,
+            );
+            register_taxonomy( 'tiktok_followers', 'product', $args );
+            
+            
+            $labels = array(
+                'name'                       => 'Twitter Followers',
+                'singular_name'              => 'Twitter Followers Number',
+                'menu_name'                  => 'Twitter Followers Number',
+                'all_items'                  => 'All Items',
+                'parent_item'                => 'Parent Item',
+                'parent_item_colon'          => 'Parent Item:',
+                'new_item_name'              => 'New Item Name',
+                'add_new_item'               => 'Add New Item',
+                'edit_item'                  => 'Edit Item',
+                'update_item'                => 'Update Item',
+                'separate_items_with_commas' => 'Separate Item with commas',
+                'search_items'               => 'Search Items',
+                'add_or_remove_items'        => 'Add or remove Items',
+                'choose_from_most_used'      => 'Choose from the most used Items',
+            );
+            $args = array(
+                'labels'                     => $labels,
+                'hierarchical'               => false,
+                'public'                     => true,
+                'show_ui'                    => true,
+                'show_admin_column'          => false,
+                'show_in_nav_menus'          => false,
+                'show_tagcloud'              => false,
+            );
+            register_taxonomy( 'twitter_followers', 'product', $args );
+            
+            $labels = array(
+                'name'                       => 'Youtube Subscribers',
+                'singular_name'              => 'Youtube Subscribers Number',
+                'menu_name'                  => 'Youtube Subscribers Number',
+                'all_items'                  => 'All Items',
+                'parent_item'                => 'Parent Item',
+                'parent_item_colon'          => 'Parent Item:',
+                'new_item_name'              => 'New Item Name',
+                'add_new_item'               => 'Add New Item',
+                'edit_item'                  => 'Edit Item',
+                'update_item'                => 'Update Item',
+                'separate_items_with_commas' => 'Separate Item with commas',
+                'search_items'               => 'Search Items',
+                'add_or_remove_items'        => 'Add or remove Items',
+                'choose_from_most_used'      => 'Choose from the most used Items',
+            );
+            $args = array(
+                'labels'                     => $labels,
+                'hierarchical'               => false,
+                'public'                     => true,
+                'show_ui'                    => true,
+                'show_admin_column'          => false,
+                'show_in_nav_menus'          => false,
+                'show_tagcloud'              => false,
+            );
+            register_taxonomy( 'youtube_subscribers', 'product', $args );
         }
 
         // Return an instance of this class.

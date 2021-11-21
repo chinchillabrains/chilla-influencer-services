@@ -117,8 +117,50 @@ class Chilla_Products {
         }
 
         $ret = $variation_obj->save();
+
+        $this->update_product_categories();
+        
         return $ret;
     }
+
+    public function update_product_categories () {
+        $variable_obj = new WC_Product_Variable( $this->parent_id );
+        $variations = $variable_obj->get_available_variations();
+        $categories_match = [
+            'meetbrand' => [
+                    'facebook' => 237,
+                    'instagram' => 235,
+                    'tiktok' => 236,
+                    'twitter' => 238,
+                    'youtube' => 239
+            ],
+            'postbrand' => [
+                    'facebook' => 227,
+                    'instagram' => 226,
+                    'twitter' => 228
+            ],
+            'storybrand' => [
+                    'facebook' => 232,
+                    'instagram' => 230,
+                    'tiktok' => 231,
+                    'youtube' => 233
+            ],
+        ];
+        $assign_categories = [];
+        foreach ( $variations as $variation ) {
+            if ( $variation['is_in_stock'] ) {
+                $category = $variation['attributes']['attribute_pa_servicecategory'];
+                $platform = $variation['attributes']['attribute_pa_serviceplatform'];
+                if ( isset( $categories_match[ $category ][ $platform ] ) ) {
+                    $assign_categories[] = $categories_match[ $category ][ $platform ];
+                }
+            }
+        }
+
+        $variable_obj->set_category_ids( $assign_categories );
+        $variable_obj->save();
+    }
+
 
     public function set_variation_outofstock ( $variation_id ) {
         $this->update_variation( ['id' => $variation_id, 'stock_status' => 'outofstock'] );

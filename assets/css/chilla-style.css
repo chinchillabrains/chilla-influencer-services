@@ -122,7 +122,9 @@
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
-    justify-content: center;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
     -webkit-box-align: center;
         -ms-flex-align: center;
             align-items: center;
@@ -286,9 +288,13 @@
 }
 
 .dashboard-services-list__variation {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
     width: 100%;
-    justify-content: space-between;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
     margin-bottom: 20px;
     border-bottom: 1px solid lightgray;
     padding: 10px 5px;
@@ -315,3 +321,45 @@
     text-align: center;
     width: 33%;
 }
+
+/* Filters Mobile */
+#beefluence-filters-toggle {
+    display: none;
+}
+@media (max-width: 767px) {
+    #beefluence-filters-toggle {
+        display: block;
+    }
+    .elementor-element-3592c3c.fixed #beefluence-filters-toggle {
+        display: none;
+    }
+    .berocket_single_filter_widget {
+        display: none;
+    }
+    .elementor-element-3592c3c.fixed .berocket_single_filter_widget {
+        display: block;
+    }
+    .elementor-element-3592c3c.fixed {
+        position: fixed;
+        z-index: 99999999999;
+        top: 0;
+        padding: 20px;
+        background-color: white;
+        bottom: 0;
+    }
+
+    .elementor-element-3592c3c.fixed .elementor-widget-wrap {
+        overflow-y: scroll;
+    }
+    #beefluence-filters-close {
+        display: none;
+    }
+    .elementor-element-3592c3c.fixed #beefluence-filters-close {
+        display: block;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 9999999;
+    }
+}
+/* END - Filters Mobile */

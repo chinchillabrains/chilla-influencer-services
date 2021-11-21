@@ -8,6 +8,12 @@ require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
 add_action( 'admin_head', function () {
     if ( isset( $_GET['run-custom-code'] ) ) {
 
+
+
+        // if( ! term_exists( 12000, 'pa_facebooklikesnum' ) ){
+        //     wp_insert_term( 12000, 'pa_facebooklikesnum' );
+        // }
+
         // $influencer_services = new Chilla_Products();
         // $influencer_services->update_variation( ['id' => 2009, 'stock_status' => 'instock'] );
 

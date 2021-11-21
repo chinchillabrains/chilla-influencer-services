@@ -56,4 +56,31 @@ jQuery(document).ready(function ($) {
         });
 
     }
+
+    // Change Dashboard menu buttons
+    if ( $('.user-is-advertiser').length > 0 ) {
+        $('.influencer-dashboard-button').hide();
+        $('.menu-dashboard-button a').attr('href', '/brand-dashboard');
+    }
+    if ( $('.user-is-influencer').length > 0 ) {
+        $('.advertiser-dashboard-button').hide();
+        $('.menu-dashboard-button a').attr('href', '/influencer-dashboard');
+    }
+
+
+    // Filters Mobile
+
+    $('#beefluence-filters-toggle').click(function () {
+        $('.elementor-element-3592c3c').toggleClass('fixed');
+        addCloseButton();
+    });
+    function addCloseButton () {
+        if ($('#beefluence-filters-close').length == 0) {
+            $('.elementor-element-3592c3c').prepend('<button id="beefluence-filters-close">X</button>');
+            $('#beefluence-filters-close').click(function () {
+        $('.elementor-element-3592c3c').removeClass('fixed');
+    });
+        }
+    }
+    // END - Filters Mobile
 });

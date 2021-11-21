@@ -50,18 +50,50 @@ class Tools {
         $product_attributes = array();
         foreach ( $combined_attributes as $tax => $terms ) {
             $is_variation = in_array( $tax, $variation_attrs ) ? 1 : 0;
+            $non_tax_attrs = [
+                'pa_facebooklikesnum'
+            ];
+            $is_taxonomy = in_array( $tax, $non_tax_attrs ) ? 0 : 1;
             $product_attributes[ $tax ] = array(
                 'name' => $tax,
                 'value' => $terms,
                 'is_visible' => 1,
                 'is_variation' => $is_variation,
-                'is_taxonomy' => 1
+                'is_taxonomy' => $is_taxonomy
             );
         }
 
         $update_result = update_post_meta( $product_id, '_product_attributes', $product_attributes );
         
         
+    }
+
+    public static function update_product_followers_filters ( $post_id, $followers ) {
+
+        $taxonomies_to_set = [];
+        if ( isset( $followers['facebook_likes_num'] ) ) {
+            $taxonomies_to_set['facebook_likes'] = (string) $followers['facebook_likes_num'];
+        }
+        if ( isset( $followers['instagram_followers_num'] ) ) {
+            $taxonomies_to_set['instagram_followers'] = (string) $followers['instagram_followers_num'];
+        }
+        if ( isset( $followers['tiktok_followers_num'] ) ) {
+            $taxonomies_to_set['tiktok_followers'] = (string) $followers['tiktok_followers_num'];
+        }
+        if ( isset( $followers['twitter_followers_num'] ) ) {
+            $taxonomies_to_set['twitter_followers'] = (string) $followers['twitter_followers_num'];
+        }
+        if ( isset( $followers['youtube_subscribers_num'] ) ) {
+            $taxonomies_to_set['youtube_subscribers'] = (string) $followers['youtube_subscribers_num'];
+        }
+
+        foreach ( $taxonomies_to_set as $tax => $value ) {
+            if ( ! term_exists( $value, $tax ) ) {
+                wp_insert_term( $value, $tax );
+            } else {
+                wp_set_post_terms( $post_id, $value, $tax, false );
+            }
+        }
     }
 
     public static function get_orders ( $object_id, $search_by ) {

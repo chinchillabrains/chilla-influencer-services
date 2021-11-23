@@ -363,3 +363,23 @@
     }
 }
 /* END - Filters Mobile */
+
+/* Price Tooltip */
+.price-tooltip {
+    position: relative;
+}
+.price-tooltip__txt {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: white;
+    padding: 10px;
+    font-size: 12px;
+    width: 200px;
+    border: 1px solid gray;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+    transform: translate3d(100%, 50%, 0);
+    z-index: 10;
+}
+/* END - Price Tooltip */

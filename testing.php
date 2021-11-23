@@ -8,8 +8,6 @@ require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
 add_action( 'admin_head', function () {
     if ( isset( $_GET['run-custom-code'] ) ) {
 
-
-
         // if( ! term_exists( 12000, 'pa_facebooklikesnum' ) ){
         //     wp_insert_term( 12000, 'pa_facebooklikesnum' );
         // }

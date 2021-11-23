@@ -26,6 +26,10 @@ jQuery(document).ready(function ($) {
         $('.dashboard-services-list__serviceStockswitch').click(function () {
             service_id = $(this).closest('.dashboard-services-list__variation').data('id');
             service_status = $(this).closest('.dashboard-services-list__variation').data('status');
+            service_price = $(this).closest('.dashboard-services-list__variation').find('.beefluence-dashboard-price-input').val();
+            if ( service_price == 0 ) {
+                alert( 'Η υπηρεσία δεν έχει τιμή!' );
+            }
             if (service_status=='inactive') {
                 var param = 'beefluence-service-activate='+service_id;
             } else {
@@ -34,6 +38,14 @@ jQuery(document).ready(function ($) {
             var url = window.location.href.split('#')[0];
             url = url.split('?')[0];
             window.location.href = url + '?' + param;
+        });
+
+        $('.price-tooltip').mouseover(function () {
+            $(this).find('.price-tooltip__txt').show();
+        });
+
+        $('.price-tooltip').mouseout(function () {
+            $(this).find('.price-tooltip__txt').hide();
         });
 
         $('form.beefluence-dashboard-price-update').submit(function (e) {

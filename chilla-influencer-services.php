@@ -183,7 +183,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $price = (string) $price;
             $price = str_replace( ',', '.', $price );
             $price = (float) $price;
-            return "<form class=\"beefluence-dashboard-price-update\">Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Ενημέρωση\" /></form>";
+            return "<form class=\"beefluence-dashboard-price-update\"><em class=\"price-tooltip\">&#8505;<p class=\"price-tooltip__txt\">Η τιμή υπολογίζεται σύμφωνα με την αμοιβή του Influencer.</p></em> Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Υπολογισμός\" /></form>";
         }
 
         public function set_product_price (  ) {
@@ -204,7 +204,25 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $user = wp_get_current_user();
             $current_user_id = (int) $user->ID;
             if ( $service_author_id === $current_user_id ) {
-                $product->set_regular_price( $price );
+                $followers_fields = [
+                    'facebook'  => 'facebook_likes_num',
+                    'instagram' => 'instagram_followers_num',
+                    'tiktok'    => 'tiktok_followers_num',
+                    'twitter'   => 'twitter_followers_num',
+                    'youtube'   => 'youtube_subscribers_num',
+                ]
+                // get service category
+                $variation = new WC_Product_Variation( $prod_id );
+                $platform = $variation['attributes']['pa_serviceplatform'];
+                // get followers of category
+                $followers = get_field( $followers_fields[ $platform ], 'user_' . $current_user_id );
+                // get calculated price
+                $calculated_price = $this->get_product_price( [
+                    'followers'         => $followers,
+                    'influencer_fee'    => $price,
+                    ] );
+                // set calculated price
+                $product->set_regular_price( $calculated_price );
                 $product->save();
             }
         }
@@ -283,30 +301,32 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                             'followers'     => $platform_followers,
                             'engagement'    => $eng_rate->name,
                         ];
-                        $service_price = $this->get_product_price( $price_options );
-                        $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
+                        // $service_price = $this->get_product_price( $price_options );
+                        // $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
+                        $influencer_services->update_variation( ['category' => $category_slug, 'platform' => $platform] );
                     }   
                 }
                 update_post_meta( $product_id, 'beef_variations_added', true );
-            } else {
-                $variable_obj = new WC_Product_Variable( $product_id );
-                $variations = $variable_obj->get_available_variations();
-                foreach ( $variations as $variation ) {
-                    $var_id = $variation['variation_id'];
-                    $platform = $variation['attributes']['attribute_pa_serviceplatform'];
-                    $platform_followers = $platforms[ $platform ];
-                    $category_slug = $variation['attributes']['attribute_pa_servicecategory'];
-                    $category_label = $service_categories[ $category_slug ];
-                    $price_options = [
-                        'category'      => $category_label,
-                        'followers'     => $platform_followers,
-                        'engagement'    => $eng_rate->name,
-                    ];
-                    $service_price = $this->get_product_price( $price_options );
-                    $influencer_services->update_variation( ['id' => $var_id, 'price' => $service_price] );
+            } 
+            // else {
+            //     $variable_obj = new WC_Product_Variable( $product_id );
+            //     $variations = $variable_obj->get_available_variations();
+            //     foreach ( $variations as $variation ) {
+            //         $var_id = $variation['variation_id'];
+            //         $platform = $variation['attributes']['attribute_pa_serviceplatform'];
+            //         $platform_followers = $platforms[ $platform ];
+            //         $category_slug = $variation['attributes']['attribute_pa_servicecategory'];
+            //         $category_label = $service_categories[ $category_slug ];
+            //         $price_options = [
+            //             'category'      => $category_label,
+            //             'followers'     => $platform_followers,
+            //             'engagement'    => $eng_rate->name,
+            //         ];
+            //         $service_price = $this->get_product_price( $price_options );
+            //         $influencer_services->update_variation( ['id' => $var_id, 'price' => $service_price] );
                     
-                }
-            }
+            //     }
+            // }
             $influencer_services->update_product_categories();
             
 
@@ -609,13 +629,12 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
 
         private function get_product_price ( $options ) {
-            if ( !isset( $options['followers'] ) || !isset( $options['engagement'] ) || !isset( $options['category'] ) ) {
+            if ( !isset( $options['followers'] ) || !isset( $options['influencer_fee'] ) ) {
                 return false;
             }
             $followers = $options['followers'];
-            $engagement = $options['engagement'];
-            $category = $options['category'];
-            $price_calc = new Beef_Price( $category, $followers, $engagement );
+            $influencer_fee = $options['influencer_fee'];
+            $price_calc = new Beef_Price( $followers, $influencer_fee );
             $price = $price_calc->get_price();
 
             return $price;
@@ -968,6 +987,10 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $user = wp_get_current_user();
             $current_user_id = (int) $user->ID;
             if ( $service_author_id === $current_user_id ) {
+                $price = $product->get_price();
+                if ( empty( $price ) ) {
+                    $status_set = 'outofstock';
+                }
                 $product->set_stock_status( $status_set );
                 $product->save();
                 $parent_id = $product->get_parent_id();

@@ -210,7 +210,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                     'tiktok'    => 'tiktok_followers_num',
                     'twitter'   => 'twitter_followers_num',
                     'youtube'   => 'youtube_subscribers_num',
-                ]
+                ];
                 // get service category
                 $variation = new WC_Product_Variation( $prod_id );
                 $platform = $variation['attributes']['pa_serviceplatform'];

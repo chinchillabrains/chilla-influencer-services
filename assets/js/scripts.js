@@ -95,4 +95,23 @@ jQuery(document).ready(function ($) {
         }
     }
     // END - Filters Mobile
+
+    // Remove parameters from URL
+    var url = window.location.href.split('#')[0];
+    url_base = url.split('?')[0];
+    url_params = url.split('?')[1];
+    params_to_remove = [
+        'beefluence-service-activate',
+        'beefluence-service-deactivate',
+        'beefluence-service-price-update',
+        'beefluence-service-price',
+        'beefluence-service-price',
+    ];
+    for (var i = 0; i < params_to_remove.length; i++ ) {
+        if ( url_params.includes( params_to_remove[ i ] ) ) {
+            window.history.replaceState({}, document.title, url_base);
+            break;
+        }
+    }
+
 });

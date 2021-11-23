@@ -124,11 +124,6 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 return $active;
             }, 10, 2 );
 
-            add_action( 'admin_head', function () {
-                if ( isset( $_GET['temp'] ) ) {
-                    
-                }
-            } );
 
             add_action( 'wp_head', array( $this, 'set_product_price' ) );
 
@@ -162,6 +157,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             if ( empty( $platform ) || empty( $user_id ) ) {
                 return false;
             }
+            // Override to make price editable in dashboard
+            return true;
+            
             $field_map = [
                 'facebook'      => 'facebook_likes_num',
                 'instagram'     => 'instagram_followers_num',
@@ -195,7 +193,6 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $price = str_replace( ',', '.', $price );
             $price = floatval( $price );
             $price = round( $price, 2 );
-            $price = $price / 1.24;
             $product = wc_get_product( $prod_id );
             if ( empty( $product ) ) {
                 return;
@@ -213,7 +210,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 ];
                 // get service category
                 $variation = new WC_Product_Variation( $prod_id );
-                $platform = $variation['attributes']['pa_serviceplatform'];
+                $platform = $variation->attributes['pa_serviceplatform'];
                 // get followers of category
                 $followers = get_field( $followers_fields[ $platform ], 'user_' . $current_user_id );
                 // get calculated price
@@ -276,17 +273,17 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
 
             $author_id = get_post_field( 'post_author', $product_id );
 
-            $facebook_likes         = get_field( 'facebook_likes', 'user_' . $author_id );
-            $instagram_followers    = get_field( 'instagram_followers', 'user_' . $author_id );
-            $tiktok_followers       = get_field( 'tiktok_followers', 'user_' . $author_id );
-            $twitter_followers      = get_field( 'twitter_followers', 'user_' . $author_id );
-            $youtube_subscribers    = get_field( 'youtube_subscribers', 'user_' . $author_id );
+            $facebook_likes         = get_field( 'facebook_likes_num', 'user_' . $author_id );
+            $instagram_followers    = get_field( 'instagram_followers_num', 'user_' . $author_id );
+            $tiktok_followers       = get_field( 'tiktok_followers_num', 'user_' . $author_id );
+            $twitter_followers      = get_field( 'twitter_followers_num', 'user_' . $author_id );
+            $youtube_subscribers    = get_field( 'youtube_subscribers_num', 'user_' . $author_id );
             $platforms = [
-                'facebook'      => $facebook_likes->name,
-                'instagram'     => $instagram_followers->name,
-                'tiktok'        => $tiktok_followers->name,
-                'twitter'       => $twitter_followers->name,
-                'youtube'       => $youtube_subscribers->name,
+                'facebook'      => $facebook_likes,
+                'instagram'     => $instagram_followers,
+                'tiktok'        => $tiktok_followers,
+                'twitter'       => $twitter_followers,
+                'youtube'       => $youtube_subscribers,
             ];
 
             $eng_rate    = get_field( 'avgengagerate', 'user_' . $author_id );
@@ -296,14 +293,15 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             if ( empty( $variations_added ) ) {
                 foreach ( $service_categories as $category_slug => $category_label ) {
                     foreach ( $platforms as $platform => $platform_followers ) {
+                        if ( empty( $platform_followers ) ) {
+                            $platform_followers = 1;
+                        }
                         $price_options = [
-                            'category'      => $category_label,
-                            'followers'     => $platform_followers,
-                            'engagement'    => $eng_rate->name,
+                            'followers'         => $platform_followers,
+                            'influencer_fee'    => 100,
                         ];
-                        // $service_price = $this->get_product_price( $price_options );
-                        // $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
-                        $influencer_services->update_variation( ['category' => $category_slug, 'platform' => $platform] );
+                        $service_price = $this->get_product_price( $price_options );
+                        $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
                     }   
                 }
                 update_post_meta( $product_id, 'beef_variations_added', true );
@@ -636,7 +634,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $influencer_fee = $options['influencer_fee'];
             $price_calc = new Beef_Price( $followers, $influencer_fee );
             $price = $price_calc->get_price();
-
+            $price = $price/1.24;
             return $price;
         }
 

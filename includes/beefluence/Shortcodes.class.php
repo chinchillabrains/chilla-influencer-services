@@ -9,6 +9,48 @@ class Shortcodes {
         add_shortcode( 'service_influencer_engagement', array( $this, 'service_influencer_engagement' ) );
         add_shortcode( 'service_followers', array( $this, 'service_followers' ) );
         add_shortcode( 'influencer_field', array( $this, 'influencer_fields' ) );
+        add_shortcode( 'influencer_pricelist', array( $this, 'influencer_pricelist' ) );
+    }
+
+    public function influencer_pricelist () {
+        $ret_html = '';
+        $author_id = get_the_author_id();
+        $pricelist = get_field( 'price_list', 'user_' . $author_id );
+        $labels = [
+            'post_prices'   => 'Post a Brand',
+            'story_prices'  => 'Story/Video a Brand',
+            'meet_prices'   => 'Meet the Brand',
+
+            'instagram_price'   => 'Instagram',
+            'facebook_price'    => 'Facebook',
+            'twitter_price'     => 'Twitter',
+            'youtube_price'     => 'Youtube',
+            'tiktok_price'      => 'TikTok',
+        ];
+        $prices_html = '<div id="beefluence-pricelist"><h4>Ενδεικτικός Τιμοκατάλογος</h4>';
+        $total_values = 0;
+        foreach ( $pricelist as $key => $prices ) {
+            $cat_html = "<table class=\"beefluence-pricelist__table\"><thead><th class=\"beefluence-pricelist__tableHead\" colspan=\"2\">{$labels[ $key ]}</th></div>";
+            $cat_values = 0;
+            foreach ( $prices as $platform => $value ) {
+                if ( empty( $value ) ) {
+                    continue;
+                }
+                $platform_html = "<tr><td class=\"beefluence-pricelist__platform\">{$labels[ $platform ]}</td><td class=\"beefluence-pricelist__value\">{$value}&euro;</td></tr>";
+                $cat_html .= $platform_html;
+                $cat_values += (float) $value;
+                $total_values += (float) $value;
+            }
+            $cat_html .= "</table>";
+            if ( $cat_values > 0 ) {
+                $prices_html .= $cat_html;
+            }
+        }
+        $prices_html .= '</div>';
+        if ( $total_values > 0 ) {
+            $ret_html = $prices_html;
+        }
+        return $ret_html;
     }
 
     public function influencer_fields ( $args ) {

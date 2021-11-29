@@ -130,13 +130,82 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             add_filter( 'body_class', array( $this, 'add_user_body_class' ) );
 
             add_action( 'woocommerce_new_order', array( $this, 'notify_influencer_for_new_order' ), 20, 1 );
+            add_action( 'woocommerce_new_order', array( $this, 'notify_brand_for_new_order' ), 20, 1 );
 
+            // add_action( 'admin_head', function () {
+            //     if ( isset( $_GET['testingrun'] ) ) {
+            //         $order_id = 2617;
+            //         // $this->notify_brand_for_new_order( $order_id );
+            //         $this->notify_influencer_for_new_order( $order_id );
+            //     }
+            // } );
+            
+        }
+
+        public function notify_brand_for_new_order ( $order_id ) {
+            $order = wc_get_order( $order_id );
+            $order_items = $order->get_items();
+            $ret_html = '<p><img src=\"https://beefluence.gr/wp-content/uploads/2021/09/cropped-1.-BEE-MAIN-HEADER-LOGO.png\" width=\"200\" height=\"100\" /></p>';
+            $ret_html .= "<table><thead><tr><th>Influencer - Υπηρεσία</th><th>Τηλέφωνο</th><th>E-mail</th><th>IBAN</th></tr></thead><tbody>";
+            foreach ( $order_items as $item ) {
+                $product_obj = $item->get_product();
+                if ( ! empty( $product_obj ) ) {
+                    $influencer_id = (int) str_replace( 'influencer_', '', $product_obj->get_sku() );
+                    $user_phone = get_field( 'phone', 'user_' . $influencer_id);
+                    $user_email = get_field( 'email', 'user_' . $influencer_id);
+                    $user_iban = get_field( 'iban', 'user_' . $influencer_id);
+
+                    $name = $product_obj->get_name();
+                    $ret_html .= "<tr style=\"border: solid 1px gray;\"><td style=\"padding: 5px;\">{$name}</td><td style=\"padding: 5px;\">{$user_phone}</td><td style=\"padding: 5px;\">{$user_email}</td><td style=\"padding: 5px;\">{$user_iban}</td></tr>";
+                }
+            }
+            $ret_html .= "</tbody></table>";
+            $to_mail = $order->get_billing_email();
+            $subject = 'Beefluence | Στοιχεία επικοινωνίας με influencers.';
+            $message = $ret_html;
+            $headers = array('Content-Type: text/html; charset=UTF-8');
+            wp_mail( $to_mail, $subject, $message, $headers );
+            wp_mail( 'ilias.p@wecommerce.gr', $subject, $message, $headers );
         }
 
         public function notify_influencer_for_new_order ( $order_id ) {
-
+            $order = wc_get_order( $order_id );
+            $items = $order->get_items();
+            $mails = ['ilias.p@wecommerce.gr'];
+            $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
+            foreach ( $items as $item ) {
+                $product_obj = $item->get_product();
+                if ( ! empty( $product_obj ) ) {
+                    $influencer_id = (int) str_replace( 'influencer_', '', $product_obj->get_sku() );
+                    $user = new WP_User( $influencer_id );
+                    if ( ! empty( $user ) ) {
+                        $influencer_email = $user->user_email;
+                        if ( ! in_array( $influencer_email, $mails ) ) {
+                            $mails[] = $influencer_email;
+                        }
+                    }   
+                }
+            }
+            foreach ( $mails as $target_email ) {
+                $to_mail = $target_email;
+                $subject = 'Beefluence | Νέα παραγγελία';
+                $message = "<p><img src=\"https://beefluence.gr/wp-content/uploads/2021/09/cropped-1.-BEE-MAIN-HEADER-LOGO.png\" width=\"200\" height=\"100\" /></p><p>Έχετε λάβει μία καινούργια παραγγελία μέσω του beefluence.gr από τον χρήστη με όνομα {$customer_name}.</p><p>Θα επικοινωνήσουμε σύντομα μαζί σας για τις λεπτομέρειες.</p><p>Σας ευχαριστούμε πολύ για τη συνεργασία.</p><p>— Η ομάδα του Beefluence</p>";
+                $headers = array('Content-Type: text/html; charset=UTF-8');
+                wp_mail( $to_mail, $subject, $message, $headers );
+            }
         }
 
+        // public function get_order_uploaded_images ( $order_id ) {
+        //     $images = get_post_meta( $order_id, '_alg_checkout_files_upload_1', true );
+        //     if ( empty( $images ) ) {
+        //         return false;
+        //     }
+        //     $ret_arr = [];
+        //     foreach ( $images as $img ) {
+        //         $ret_arr[] = 'https://www.beefluence.gr/wp-content/uploads/woocommerce_uploads/alg_uploads/checkout_files_upload/' . $img['tmp_name'];
+        //     }
+        //     return $ret_arr;
+        // }
 
         public function add_user_body_class ( $classes ) {
             $user = wp_get_current_user();
@@ -181,7 +250,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $price = (string) $price;
             $price = str_replace( ',', '.', $price );
             $price = (float) $price;
-            return "<form class=\"beefluence-dashboard-price-update\"><em class=\"price-tooltip\">&#8505;<p class=\"price-tooltip__txt\">Η τιμή υπολογίζεται σύμφωνα με την αμοιβή του Influencer.</p></em> Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Υπολογισμός\" /></form>";
+            return "<form class=\"beefluence-dashboard-price-update\"><em class=\"price-tooltip\">&#8505;<p class=\"price-tooltip__txt\">Συμπληρώστε την αμοιβή σας, ώστε να υπολογιστεί η αναγραφόμενη προμήθεια του beefluence.</p></em> Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Υπολογισμός\" /><p class=\"services-dashboard-price-calc-msg\"><em>Είναι υποχρεωτικό να πατήσετε το κουμπί \"Υπολογισμός\" ώστε να καταχωρηθεί η υπηρεσία σας.</em></p></form>";
         }
 
         public function set_product_price (  ) {
@@ -298,7 +367,7 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                         }
                         $price_options = [
                             'followers'         => $platform_followers,
-                            'influencer_fee'    => 100,
+                            'influencer_fee'    => 1,
                         ];
                         $service_price = $this->get_product_price( $price_options );
                         $influencer_services->update_variation( ['price' => $service_price, 'category' => $category_slug, 'platform' => $platform] );
@@ -424,9 +493,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
         
         public function add_scripts_and_styles () {
-            wp_enqueue_style( 'influencer-services-styles', plugin_dir_url( __FILE__ ) . 'assets/css/chilla-style.css' );
+            wp_enqueue_style( 'influencer-services-styles', plugin_dir_url( __FILE__ ) . 'assets/css/chilla-style.css', [], time() );
 
-            wp_enqueue_script( 'beefluence-dashboard-js', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array('jquery') );
+            wp_enqueue_script( 'beefluence-dashboard-js', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array('jquery'), time() );
 
         }
 
@@ -605,8 +674,8 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
 
         protected function notification_newservice_admin ( $product_id ) {
-            // $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
-            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr';
+            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
+            // $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr';
             $subject = 'Beefluence | Νέα υπηρεσία προς έγκριση';
             $message = "Προστέθηκε μια νέα υπηρεσία προς έγκριση. Κωδικός υπηρεσίας: #{$product_id}";
             wp_mail( $to_mail, $subject, $message );
@@ -837,6 +906,15 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                             $order_items = $order_obj->get_items();
                                             $order_items_html = '';
                                             foreach ( $order_items as $item ) {
+                                                // Skip product if it is from another influencer
+                                                $parent_product_id = $item->get_data()['product_id']; 
+                                                $parent_product = wc_get_product($parent_product_id);
+                                                $parent_sku = $parent_product->get_sku();
+                                                $influencer_id = (int) str_replace( 'influencer_', '', $parent_sku );
+                                                if ( $influencer_id != $args['user_id'] ) {
+                                                    continue;
+                                                }
+
                                                 $order_items_html .= '<li>' . $item->get_name() . '</li>';
                                             }
                                             $date_obj = $order_obj->get_date_created();
@@ -845,7 +923,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                             $total_price = $order_obj->get_formatted_order_total();
                                             $ret_html .= "<div class=\"dashboard-services-list__order\">";
                                                 $ret_html .= "<div><div>{$name}</div><ul>{$order_items_html}</ul></div>";
-                                                $ret_html .= "<div><span>Τιμή: {$total_price} - Ημερομηνία: {$date_added}</span></div>";
+                                                // Removed price (Order price is only relevant to beefluence) - 29 Nov 2021
+                                                // $ret_html .= "<div><span>Τιμή: {$total_price} - Ημερομηνία: {$date_added}</span></div>";
+                                                $ret_html .= "<div><span>Ημερομηνία: {$date_added}</span></div>";
                                             $ret_html .= "</div>";
                                         }
                                         $ret_html .= "</div>";
@@ -1024,15 +1104,26 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                         $url = $product_obj->get_permalink();
                                         $influencer_id = (int) str_replace( 'influencer_', '', $product_obj->get_sku() );
                                         $thumbnail = get_avatar( $influencer_id );
+                                        $user_phone = get_field( 'phone', 'user_' . $influencer_id);
+                                        $user_phone = ( empty( $user_phone ) ? '' : "<span class=\"ordered-services__info\">Τηλέφωνο: {$user_phone}</span>" );
+                                        $user_email = get_field( 'email', 'user_' . $influencer_id);
+                                        $user_email = ( empty( $user_email ) ? '' : "<span class=\"ordered-services__info\">E-mail: {$user_email}</span>" );
+                                        $user_iban = get_field( 'iban', 'user_' . $influencer_id);
+                                        $user_iban = ( empty( $user_iban ) ? '' : "<span class=\"ordered-services__info\">IBAN: {$user_iban}</span>" );
+
                                         $name = $product_obj->get_name();
                                         $price = (float) $item->get_subtotal();
                                         $price_tax = (float) $item->get_subtotal_tax();
                                         $total_price = $price + $price_tax;
+                                        $total_price = round( $total_price, 2 );
                                         $total_price = ( $total_price == 0 ? 'Επικοινωνήστε μαζί μας' : $total_price.'&euro;' );
                                         $ret_html .= "<li class=\"ordered-services__service\">
                                             <div class=\"ordered-services__img\">{$thumbnail}</div>
                                             <div class=\"ordered-services__txtwrapper\">
                                             <a href=\"{$url}\"><h4 class=\"ordered-services__name\">{$name} - #{$product_obj->get_id()}</h4></a>
+                                            <p class=\"ordered-services__details\">
+                                                {$user_email}{$user_phone}{$user_iban}
+                                            </p>
                                             <p class=\"ordered-services__details\">
                                                 <span class=\"ordered-services__price\">Τιμή: {$total_price}</span>
                                                 <span class=\"ordered-services__date\">Ημερομηνία: {$date_added}</span>

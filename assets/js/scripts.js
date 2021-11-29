@@ -96,6 +96,23 @@ jQuery(document).ready(function ($) {
     }
     // END - Filters Mobile
 
+
+    if ( $('.woocommerce-checkout').length > 0 ) {
+        $table = $('#alg_checkout_files_upload_form_1');
+        $title = $table.find('[for="alg_checkout_files_upload_1"]');
+        $title.css('pointerEvents', 'none');
+        if ($('.alg_checkout_files_upload_result_1').length > 5) {
+            $('#alg_checkout_files_upload_button_1').attr('style', 'display: none !important');
+        }
+        $(document.body).on('checkout-images-updated', function () {
+            if ($('.alg_checkout_files_upload_result_1').length > 5) {
+                $('#alg_checkout_files_upload_button_1').attr('style', 'display: none !important');
+            } else {
+                $('#alg_checkout_files_upload_button_1').attr('style', 'display: block !important');
+            }
+        });
+    }
+
     // Remove parameters from URL
     var url = window.location.href.split('#')[0];
     url_base = url.split('?')[0];
@@ -113,5 +130,4 @@ jQuery(document).ready(function ($) {
             break;
         }
     }
-
 });

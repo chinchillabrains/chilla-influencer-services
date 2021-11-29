@@ -7,7 +7,14 @@ require_once( __DIR__ . '/includes/chinchillabrains/Products.class.php' );
 
 add_action( 'admin_head', function () {
     if ( isset( $_GET['run-custom-code'] ) ) {
+        $id = 5;
+        $user = new WP_User( $id );
+        var_dump( $user->user_email );
 
+        // $query = "SELECT * FROM {$wpdb->postmeta} WHERE post_id='2594'";
+        // $query = "SELECT * FROM {$wpdb->postmeta} WHERE meta_key='_product_image_gallery'";
+        // $result = $wpdb->get_results( $query );
+        // var_dump($images);
         // if( ! term_exists( 12000, 'pa_facebooklikesnum' ) ){
         //     wp_insert_term( 12000, 'pa_facebooklikesnum' );
         // }

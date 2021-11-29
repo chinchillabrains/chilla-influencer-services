@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Influencer Services for WooCommerce
  * Description: Adds custom roles & service fields in Woocommerce products & Creates front-end page for adding & editing services.
- * Version: 1.0.0
+ * Version: 2.0.0
  * Author: chinchillabrains
  * Requires at least: 5.0
  * Author URI: https://chinchillabrains.com

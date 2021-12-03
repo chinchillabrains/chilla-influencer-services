@@ -23,21 +23,41 @@ jQuery(document).ready(function ($) {
         } );
 
         
-        $('.dashboard-services-list__serviceStockswitch').click(function () {
-            service_id = $(this).closest('.dashboard-services-list__variation').data('id');
-            service_status = $(this).closest('.dashboard-services-list__variation').data('status');
-            service_price = $(this).closest('.dashboard-services-list__variation').find('.beefluence-dashboard-price-input').val();
-            if ( service_price == 0 ) {
+        $('.dashboard-services-list__serviceStockswitch').click(function (e) {
+            e.preventDefault();
+            $variation = $(this).closest('.dashboard-services-list__variation');
+            var $label = $variation.find('.dashboard-services-list__serviceStockstatus');
+            service_id = $variation.data('id');
+            is_active = $variation.hasClass('active');
+            service_price = $variation.find('.beefluence-dashboard-price-input').val();
+            if ( $variation.find('.beefluence-variation-empty-price').length > 0 ) {
                 alert( 'Η υπηρεσία δεν έχει τιμή!' );
+                return;
             }
-            if (service_status=='inactive') {
+            if (is_active == false) {
                 var param = 'beefluence-service-activate='+service_id;
+                $label.text('Ενεργή');
+                $label.removeClass('dashboard-services-list__service--red');
+                $label.addClass('dashboard-services-list__service--green');
+                $variation.removeClass('inactive');
+                $variation.addClass('active');
+                $variation.find('[type="checkbox"]').prop('checked', true);
             } else {
                 var param = 'beefluence-service-deactivate='+service_id;
+                $label.text('Ανενεργή');
+                $label.removeClass('dashboard-services-list__service--green');
+                $label.addClass('dashboard-services-list__service--red');
+                $variation.removeClass('active');
+                $variation.addClass('inactive');
+                $variation.find('[type="checkbox"]').prop('checked', false);
             }
             var url = window.location.href.split('#')[0];
             url = url.split('?')[0];
-            window.location.href = url + '?' + param;
+            // window.location.href = url + '?' + param;
+            const xhttp = new XMLHttpRequest();
+            xhttp.open("GET", url + '?' + param, true);
+            xhttp.send();
+            // fetch(url + '?' + param);
         });
 
         $('.price-tooltip').mouseover(function () {
@@ -58,6 +78,35 @@ jQuery(document).ready(function ($) {
             window.location.href = url + '?' + param;
         });
 
+        
+        $('form.beefluence-dashboard-all-prices-update').submit(function (e) {
+            e.preventDefault();
+            var $variations = $(this).closest('.dashboard-services-list__variations').find('.dashboard-services-list__variation');
+            $variations.each(function () {
+                service_id = $(this).data('id');
+                service_price = parseInt($(this).find('.beefluence-dashboard-price-input').val());
+                if ( service_price > 0 ) {
+                    param = 'beefluence-service-price-update='+service_id+'&beefluence-service-price='+service_price;
+                    var url = window.location.href.split('#')[0];
+                    url = url.split('?')[0];
+                    const xhttp = new XMLHttpRequest();
+                    xhttp.open("GET", url + '?' + param, true);
+                    xhttp.send();
+                    // fetch(url + '?' + param);
+                }
+            });
+            // window.location.href = url + '?' + param;
+            setTimeout(() => {location.reload()}, 5500);
+        });
+
+        $('form.beefluence-dashboard-all-prices-update input').click(function (e) {
+            e.preventDefault();
+            $(this).css('opacity', '0.4');
+            $(this).css('pointerEvents', 'none');
+            $form = $(this).closest('.beefluence-dashboard-all-prices-update');
+            $form.css('cursor', 'wait');
+            $form.submit();
+        });
 
         $('.dashboard-services-list__ordersToggle').click(function () {
             $(this).closest('.dashboard-services-list__serviceOrders').find('.dashboard-services-list__orders').toggle();
@@ -109,6 +158,11 @@ jQuery(document).ready(function ($) {
                 $('#alg_checkout_files_upload_button_1').attr('style', 'display: none !important');
             } else {
                 $('#alg_checkout_files_upload_button_1').attr('style', 'display: block !important');
+            }
+        });
+        jQuery(document).ready(function ($) {
+            if ($('#checkout-images-explanation').length == 0) {
+                $('<small id="checkout-images-explanation"><em> - Εδώ μπορείτε να ανεβάσετε τις εικόνες που θα θέλατε να προωθήσει ο Influencer.</em><small>').insertAfter('label[for="alg_checkout_files_upload_1"]');
             }
         });
     }

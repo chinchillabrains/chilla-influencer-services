@@ -315,13 +315,10 @@
 .dashboard-services-list__ordersToggle, .dashboard-services-list__variationsToggle {
     font-size: 1.2em;
 }
-.dashboard-services-list__variationsList {
-    display: none;
-}
 
 .dashboard-services-list__variation > div {
     text-align: center;
-    width: 33%;
+    width: 25%;
 }
 
 /* Filters Mobile */
@@ -411,4 +408,15 @@
     font-size: 11px;
     line-height: 1.2em;
     margin-top: 10px;
+}
+.beefluence-dashboard-all-prices-update {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.beefluence-dashboard-all-prices-update input[type="submit"], .beefluence-dashboard-all-prices-update input[type="submit"]:hover {
+    margin-top: 10px;
+    background-color: #00aadc;
+    color: white;
 }

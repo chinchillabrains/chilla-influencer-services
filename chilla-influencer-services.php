@@ -227,7 +227,6 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 return false;
             }
             // Override to make price editable in dashboard
-            return true;
             
             $field_map = [
                 'facebook'      => 'facebook_likes_num',
@@ -240,17 +239,17 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                 return false;
             }
             $followers = (int) get_field( $field_map[ $platform ], 'user_' . $user_id );
-            if ( $followers > 40000 ) {
-                return true;
+            if ( $followers > 204999 ) {
+                return false;
             }
-            return false;
+            return true;
         }
 
         public function get_price_edit_html ( $price = '' ) {
             $price = (string) $price;
             $price = str_replace( ',', '.', $price );
             $price = (float) $price;
-            return "<form class=\"beefluence-dashboard-price-update\"><em class=\"price-tooltip\">&#8505;<p class=\"price-tooltip__txt\">Συμπληρώστε την αμοιβή σας, ώστε να υπολογιστεί η αναγραφόμενη προμήθεια του beefluence.</p></em> Τιμή: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"{$price}\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Υπολογισμός\" /><p class=\"services-dashboard-price-calc-msg\"><em>Είναι υποχρεωτικό να πατήσετε το κουμπί \"Υπολογισμός\" ώστε να καταχωρηθεί η υπηρεσία σας.</em></p></form>";
+            return "<form class=\"beefluence-dashboard-price-update\"><em class=\"price-tooltip\">&#8505;<p class=\"price-tooltip__txt\">Συμπληρώστε την αμοιβή σας, ώστε να υπολογιστεί η αναγραφόμενη προμήθεια του beefluence.</p></em> Αμοιβή Influencer: <input name=\"price-input\" class=\"beefluence-dashboard-price-input\" type=\"text\" value=\"\" /><input style=\"margin-top: 10px;\" type=\"submit\" value=\"Υπολογισμός\" /><p class=\"services-dashboard-price-calc-msg\"><em>Είναι υποχρεωτικό να πατήσετε το κουμπί \"Υπολογισμός\" ώστε να καταχωρηθεί η υπηρεσία σας.</em></p></form>";
         }
 
         public function set_product_price (  ) {
@@ -493,9 +492,9 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
         
         public function add_scripts_and_styles () {
-            wp_enqueue_style( 'influencer-services-styles', plugin_dir_url( __FILE__ ) . 'assets/css/chilla-style.css', [], time() );
+            wp_enqueue_style( 'influencer-services-styles', plugin_dir_url( __FILE__ ) . 'assets/css/chilla-style.css', [], '30.0.0' );
 
-            wp_enqueue_script( 'beefluence-dashboard-js', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array('jquery'), time() );
+            wp_enqueue_script( 'beefluence-dashboard-js', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array('jquery'), '30.0.3' );
 
         }
 
@@ -914,15 +913,16 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                                 if ( $influencer_id != $args['user_id'] ) {
                                                     continue;
                                                 }
-
                                                 $order_items_html .= '<li>' . $item->get_name() . '</li>';
                                             }
                                             $date_obj = $order_obj->get_date_created();
                                             $date_added = $date_obj->date_i18n( 'd/m/Y' );
                                             $name = $order_obj->get_formatted_billing_full_name();
+                                            $mail = $order_obj->get_billing_email();
+                                            $phone = $order_obj->get_billing_phone();
                                             $total_price = $order_obj->get_formatted_order_total();
                                             $ret_html .= "<div class=\"dashboard-services-list__order\">";
-                                                $ret_html .= "<div><div>{$name}</div><ul>{$order_items_html}</ul></div>";
+                                                $ret_html .= "<div><div>{$name} - {$mail} - {$phone}</div><ul>{$order_items_html}</ul></div>";
                                                 // Removed price (Order price is only relevant to beefluence) - 29 Nov 2021
                                                 // $ret_html .= "<div><span>Τιμή: {$total_price} - Ημερομηνία: {$date_added}</span></div>";
                                                 $ret_html .= "<div><span>Ημερομηνία: {$date_added}</span></div>";
@@ -933,10 +933,12 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                 }
                                 $ret_html .= "<div class=\"dashboard-services-list__variations\">";
                                 $ret_html .= "<p class=\"dashboard-services-list__variationsToggle\">Υπηρεσίες &darr;</p>";
+                                $ret_html .= "<p style=\"font-size: 14px;\">Από την τιμή που εσείς θα ορίζετε στις υπηρεσίες σας, θα παρακρατείται 15%. Αυτό αφορά την εύρεση συνεργασίας, το management και την επικοινωνία με τις επιχειρήσεις για το κάθε διαφημιστικό campaign. Η πλατφόρμα θα σας παραχωρεί όλες τις λεπτομέρειες του campaign και τα στοιχεία της κάθε επιχείρησης. Στην εγγραφή σας μπορείτε να συμπληρώσετε έναν τραπεζικό λογαριασμό, ώστε η επιχείρηση να σας καταθέτει το ποσό πληρωμής, μετά τη διεκπεραίωση του κάθε διαφημιστικού campaign. Για περισσότερες λεπτομέρειες ανατρέξτε στους <a href=\"https://beefluence.gr/privacy-policy/\" target=\"_blank\">Όρους & Πολιτική Απορρήτου</a> της πλατφόρμας.</p>"; 
                                     $parent_product = new WC_Product_Variable( $service['id'] );
                                     $variations = $parent_product->get_available_variations();
                                     $variations_sorted = [];
                                     foreach ( $variations as $variation ) {
+                                        // var_dump($variation);
                                         $platform = get_term_by( 'slug', $variation['attributes']['attribute_pa_serviceplatform'], 'pa_serviceplatform' );
                                         $variation['platform'] = $platform->name;
                                         $servicecat = get_term_by( 'slug', $variation['attributes']['attribute_pa_servicecategory'], 'pa_servicecategory' );
@@ -947,13 +949,20 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                             array_push( $variations_sorted, $variation );
                                         }
                                     }
+                                    $ret_html .= '<form class="beefluence-dashboard-all-prices-update"><input type="submit" value="Υπολογισμός όλων των τιμών" /></form>';
                                     $ret_html .= "<ul class=\"dashboard-services-list__variationsList\">";
                                     foreach ( $variations_sorted as $variation ) {
                                         $price_is_editable = $this->price_is_editable( $variation['attributes']['attribute_pa_serviceplatform'], $args['user_id'] );
                                         if ( $price_is_editable ) {
-                                            $variation_price = $this->get_price_edit_html( $variation['display_price'] );
-                                        } else {
                                             $variation_price = $variation['price_html'];
+                                            $influencer_price = $this->get_price_edit_html( $variation['display_price'] );
+                                        } else {
+                                            $influencer_price = '';
+                                            if ( empty( $variation['display_price'] ) ) {
+                                                $variation_price = '<span class="beefluence-variation-empty-price" style="color: red;">Επικοινωνήστε μαζί μας</span>';
+                                            } else {
+                                                $variation_price = $variation['price_html'];
+                                            }
                                         }
                                         if ( $variation['is_in_stock'] ) {
                                             $variation['stock_status_color'] = 'green';
@@ -964,9 +973,10 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
                                         }
                                         $stock_checked = ( 'green' === $variation['stock_status_color'] ? 'checked' : '' );
                                         $variation_active = ( 'green' === $variation['stock_status_color'] ? 'active' : 'inactive' );
-                                        $ret_html .= "<li class=\"dashboard-services-list__variation\" data-id=\"{$variation['variation_id']}\" data-status=\"{$variation_active}\">";
+                                        $ret_html .= "<li class=\"dashboard-services-list__variation {$variation_active}\" data-id=\"{$variation['variation_id']}\">";
                                             $ret_html .= "<div><div>{$variation['platform']}</div><div>{$variation['servicecat']}</div></div>";
-                                            $ret_html .= "<div>{$variation_price}</div>";
+                                            $ret_html .= "<div>{$influencer_price}</div>";
+                                            $ret_html .= "<div>Αμοιβή BeeFluence: {$variation_price}</div>";
                                             $ret_html .= "<div>";
                                             if ( 'green' == $service['product_status_color'] ) {
                                                 $ret_html .= "<div class=\"dashboard-services-list__serviceStock\">";

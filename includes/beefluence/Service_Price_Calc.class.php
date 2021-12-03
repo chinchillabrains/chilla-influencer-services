@@ -96,7 +96,11 @@ class Service_Price_Calc {
         foreach ( $this->followers_tier as $tier ) {
             if ( $tier['floor'] <= $this->followers && $this->followers <= $tier['ceil'] ) {
                 $price = $tier['charge'] + ($this->influencer_fee_percentage * $this->influencer_fee);
+                break;
             }
+        }
+        if (  205000 <= $this->followers ) {
+            $price = 0;
         }
 
         $this->total_price = $price;

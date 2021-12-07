@@ -165,13 +165,12 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
             $message = $ret_html;
             $headers = array('Content-Type: text/html; charset=UTF-8');
             wp_mail( $to_mail, $subject, $message, $headers );
-            wp_mail( 'ilias.p@wecommerce.gr', $subject, $message, $headers );
         }
 
         public function notify_influencer_for_new_order ( $order_id ) {
             $order = wc_get_order( $order_id );
             $items = $order->get_items();
-            $mails = ['ilias.p@wecommerce.gr'];
+            $mails = [];
             $customer_name = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name();
             foreach ( $items as $item ) {
                 $product_obj = $item->get_product();
@@ -673,22 +672,21 @@ if ( ! class_exists( 'Chin_Influencer_Services' ) ) {
         }
 
         protected function notification_newservice_admin ( $product_id ) {
-            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
-            // $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr';
+            $to_mail = get_option( 'admin_email' ) . ',beefluence@gmail.com';
             $subject = 'Beefluence | Νέα υπηρεσία προς έγκριση';
             $message = "Προστέθηκε μια νέα υπηρεσία προς έγκριση. Κωδικός υπηρεσίας: #{$product_id}";
             wp_mail( $to_mail, $subject, $message );
         }
 
         protected function notification_newinfluencer_admin ( $user_name, $user_email ) {
-            $to_mail = get_option( 'admin_email' ) . ',ilias.p@wecommerce.gr,beefluence@gmail.com';
+            $to_mail = get_option( 'admin_email' ) . ',beefluence@gmail.com';
             $subject = 'Beefluence | Νέα εγγραφή Influencer';
             $message = "Νέος Influencer γράφτηκε στον ιστότοπο. Username: {$user_name} E-mail: {$user_email}";
             wp_mail( $to_mail, $subject, $message );
         }
 
         protected function notification_neworder_influencer ( $influencer_email, $service_name, $price, $customer_name ) {
-            $to_mail = $influencer_email . ',ilias.p@wecommerce.gr';
+            $to_mail = $influencer_email;
             $subject = 'Beefluence | Νέα παραγγελία';
             $message = "Έχετε νέα παραγγελία. Δείτε περισσότερες λεπτομέρειες στο https://beefluence.gr/influencer-login/";
             wp_mail( $to_mail, $subject, $message );
